@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    "types": []
+  },
+  "include": [
+    "src/index.ts",
+    "src/client.ts",
+    "src/cache.ts",
+    "src/schemas.ts",
+    "src/types.ts"
+  ],
+  "exclude": ["src/**/*.test.ts"]
+}

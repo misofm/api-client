@@ -1,0 +1,60 @@
+{
+  "name": "@misofm/api-client",
+  "version": "0.5.5",
+  "description": "Typed client and response contract for the Miso API read layer. The one definition of what a Miso read returns.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/misofm/api-client.git"
+  },
+  "homepage": "https://github.com/misofm/api-client#readme",
+  "bugs": {
+    "url": "https://github.com/misofm/api-client/issues"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas.d.ts",
+      "import": "./dist/schemas.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
+    "./cache": {
+      "types": "./dist/cache.d.ts",
+      "import": "./dist/cache.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "node ./scripts/clean.mjs && tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
+    "pack:check": "node ./scripts/verify-package.mjs",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "^5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
