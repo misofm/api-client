@@ -69,6 +69,18 @@ export const creditSchema = z.object({
   roles: z.array(z.string()),
 });
 
+/** A canonical-PCM stem digest (engine STEM_IDENTITY_V1) as 64 lowercase hex chars. */
+export const stemDigestSchema = z
+  .string()
+  .regex(/^[0-9a-f]{64}$/, "expected a lowercase SHA-256 hex digest");
+
+/** A track's on-chain Miso Engine session: the Session V1 blob and one FLAC blob per source. */
+export const trackEngineSessionSchema = z.object({
+  sessionBlobId: walrusBlobIdSchema,
+  /** Sorted by digest, as stored on chain; `digest` equals the session source's `content` without `sha256:`. */
+  stems: z.array(z.object({ digest: stemDigestSchema, blobId: walrusBlobIdSchema })),
+});
+
 export const trackViewSchema = z.object({
   /** Display number — "1", or "1.2" (disc.track) on a multi-disc set. */
   no: z.string(),
@@ -79,8 +91,16 @@ export const trackViewSchema = z.object({
   /** This track's share of the release's revenue, in basis points. */
   splitBps: z.number().int().min(0).max(10_000),
   disc: z.number().int().min(1),
-  /** Streaming master attached through recording_master_reference, when present. */
+  /** Archival master attached through recording_master_reference, when present. */
   masterBlobId: walrusBlobIdSchema.optional(),
+  /**
+   * The `miso-hls/v1` streaming transcode Quilt attached through
+   * recording_streaming_transcode, when present. The playback key: the master
+   * playlist is `<aggregator>/v1/blobs/by-quilt-id/<id>/master.m3u8`.
+   */
+  transcodeQuiltId: walrusBlobIdSchema.optional(),
+  /** The Miso Engine session attached through recording_engine_session, when present. */
+  engineSession: trackEngineSessionSchema.optional(),
   /**
    * Encrypted mix delivery descriptor attached to this release track, when present.
    *

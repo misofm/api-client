@@ -311,6 +311,16 @@ describe("contract validation", () => {
       splitBps: 10_000,
       disc: 1,
       masterBlobId: "VwMOwKRnoRohGqEfRvE_21IUqOLaBp7pbyXnwD68UAE",
+      transcodeQuiltId: "h23-eMAzJekI1fSvMJrAg-YiU2p0LCXM9zrzwpVPxLY",
+      engineSession: {
+        sessionBlobId: "PeqJYPS46oXjALZ9KbH0ZNCESLx8bssjvGWWanXZfl4",
+        stems: [
+          {
+            digest: "ba8f39a6c7b1f22bded6ce6d97361a01ce751282b3f1ab08f931b876c6734ae1",
+            blobId: "jvHC9wQwEl8l_NR4u5fX7n8tV6A5GrgWn2E47Y0eYS4",
+          },
+        ],
+      },
       mixBlobId: "1wMOwKRnoRohGqEfRvE_21IUqOLaBp7pbyXnwD68UAE",
     };
     expect(trackViewSchema.parse(track)).toEqual(track);
@@ -319,6 +329,15 @@ describe("contract validation", () => {
     ).toThrow();
     expect(() =>
       trackViewSchema.parse({ ...track, mixBlobId: "not-a-blob-id" }),
+    ).toThrow();
+    expect(() =>
+      trackViewSchema.parse({ ...track, transcodeQuiltId: "not-a-quilt-id" }),
+    ).toThrow();
+    expect(() =>
+      trackViewSchema.parse({
+        ...track,
+        engineSession: { ...track.engineSession, stems: [{ digest: "SHA", blobId: track.masterBlobId }] },
+      }),
     ).toThrow();
     expect(() =>
       trackViewSchema.parse({ ...track, mixBlobId: `${track.mixBlobId.slice(0, -1)}B` }),
