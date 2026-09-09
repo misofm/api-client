@@ -457,3 +457,35 @@ export const apiErrorSchema = z.object({
     message: z.string(),
   }),
 });
+
+// ── Royalty claims ───────────────────────────────────────────────────────────
+
+/** One pool swept by a royalty claim transaction. */
+export const royaltyClaimEntrySchema = z.object({
+  poolId: suiIdSchema,
+  stakeId: suiIdSchema,
+  /** The pool's share type, e.g. `0x…::share::Share`. */
+  shareType: z.string(),
+  /** The currency paid out, e.g. the network's stable coin type. */
+  currency: z.string(),
+  /** Base units of `currency`, a u64 as a decimal string. */
+  amount: z.string().regex(/^\d+$/),
+});
+
+/** One royalty claim transaction sent by the wallet. */
+export const royaltyClaimSchema = z.object({
+  txDigest: z.string().min(1),
+  /** Checkpoint timestamp, milliseconds since the epoch; 0 when the index had none. */
+  timestampMs: z.number().int().nonnegative(),
+  /** The pools swept, in event order. */
+  entries: z.array(royaltyClaimEntrySchema),
+});
+
+/** A page of a wallet's royalty claims, newest first. */
+export const royaltyClaimsPageSchema = z.object({
+  claims: z.array(royaltyClaimSchema),
+  /** Pass as `before` for the next (older) page; null when none remain. */
+  nextCursor: z.string().nullable(),
+  /** Earliest timestamp the event index still covers, or null if unknown. */
+  availableFromMs: z.number().int().nullable(),
+});

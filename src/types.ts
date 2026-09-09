@@ -43,3 +43,6 @@ export type TrackRoyalty = z.infer<typeof s.trackRoyaltySchema>;
 export type PurchaseReceipt = z.infer<typeof s.purchaseReceiptSchema>;
 
 export type ApiErrorBody = z.infer<typeof s.apiErrorSchema>;
+export type RoyaltyClaimEntry = z.infer<typeof s.royaltyClaimEntrySchema>;
+export type RoyaltyClaim = z.infer<typeof s.royaltyClaimSchema>;
+export type RoyaltyClaimsPage = z.infer<typeof s.royaltyClaimsPageSchema>;
