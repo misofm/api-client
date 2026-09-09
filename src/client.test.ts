@@ -535,3 +535,46 @@ describe("cache buster", () => {
       .toThrow(RangeError);
   });
 });
+
+describe("royalty claims", () => {
+  const page = {
+    claims: [
+      {
+        txDigest: "FADgaLwmuoyiGgcFvqGyuXd5emk1Zq46cNH1p44Ca73U",
+        timestampMs: 1788953314915,
+        entries: [
+          {
+            poolId: "0x8619266a87ff5615803f3d4256ec90906f7b74828cc7f7f891941ff8d2a75e28",
+            stakeId: "0x77bd5f2852455cb897c7c210c943ac7a959817891dcc20b3839914a4079a857b",
+            shareType: "0x7805::share::Share",
+            currency: "0x7777::fakeusd::FakeUsd",
+            amount: "23800000",
+          },
+        ],
+      },
+    ],
+    nextCursor: "KAFCCggAEMSQr+oOGAU=",
+    availableFromMs: 1786601343736,
+  };
+
+  test("reads the newest page without a cursor and the next one with it", async () => {
+    const { fetch, calls } = stubFetch({ body: page });
+    const api = createMisoApiClient({ baseUrl: BASE, fetch });
+    const first = await api.listWalletRoyaltyClaims("0xabc");
+    expect(calls[0]).toBe(`${BASE}/read/v1/wallets/0xabc/royalty-claims`);
+    expect(first.claims[0]?.entries[0]?.amount).toBe("23800000");
+
+    await api.listWalletRoyaltyClaims("0xabc", { before: first.nextCursor, limit: 20 });
+    expect(calls[1]).toBe(
+      `${BASE}/read/v1/wallets/0xabc/royalty-claims?before=KAFCCggAEMSQr%2BoOGAU%3D&limit=20`,
+    );
+  });
+
+  test("rejects a page whose amounts are not u64 strings", async () => {
+    const broken = { ...page, claims: [{ ...page.claims[0], entries: [{ ...page.claims[0]!.entries[0], amount: "12.5" }] }] };
+    const { fetch } = stubFetch({ body: broken });
+    await expect(createMisoApiClient({ baseUrl: BASE, fetch }).listWalletRoyaltyClaims("0xabc")).rejects.toBeInstanceOf(
+      MisoApiContractError,
+    );
+  });
+});

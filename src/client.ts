@@ -12,15 +12,16 @@ import type {
   Balance,
   ListingView,
   OwnedParty,
-  PendingMembership,
   OwnedRecord,
   OwnedWork,
   Ownership,
   PartySummary,
+  PendingMembership,
   PressingView,
   PurchaseReceipt,
   RecordAlbum,
   ReleaseDetail,
+  RoyaltyClaimsPage,
   WorkDetail,
 } from "./types.js";
 
@@ -342,6 +343,24 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<OwnedParty[]> =>
     required(s.ownedPartiesSchema, `/wallets/${segment(address)}/parties`, {}, opts);
 
+  /**
+   * The wallet's royalty claim transactions, newest first, one page at a time.
+   * Pass a page's `nextCursor` as `before` for the next (older) page. The event
+   * index behind this keeps a bounded window; `availableFromMs` says how far
+   * back it reaches.
+   */
+  const listWalletRoyaltyClaims = (
+    address: string,
+    page: { before?: string | null; limit?: number } = {},
+    opts: MisoRequestOptions = {},
+  ): Promise<RoyaltyClaimsPage> =>
+    required(
+      s.royaltyClaimsPageSchema,
+      `/wallets/${segment(address)}/royalty-claims`,
+      { before: page.before ?? undefined, limit: page.limit },
+      opts,
+    );
+
   const listWalletPendingMemberships = (
     address: string,
     opts: MisoRequestOptions = {},
@@ -451,6 +470,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     getArtist,
     listArtists,
     listWalletRecords,
+    listWalletRoyaltyClaims,
     listWalletParties,
     listWalletPendingMemberships,
     listWalletWorks,
@@ -529,6 +549,7 @@ export const READ_CACHE_CLASS = {
   listArtists: "artist",
   getArtists: "artist",
   listWalletRecords: "private",
+  listWalletRoyaltyClaims: "private",
   getWalletRecords: "private",
   listWalletParties: "private",
   getWalletParties: "private",
