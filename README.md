@@ -40,7 +40,7 @@ Singular resources use `get…`; collections use `list…`:
 | --- | --- |
 | Catalog | `getPressing`, `getPressingListing`, `getRelease`, `getRecordAlbum` |
 | Artists | `getArtist`, `listArtists` |
-| Wallet | `listWalletRecords`, `listWalletParties`, `listWalletPendingMemberships`, `listWalletWorks`, `getWalletBalance`, `getWalletOwnership`, `getWalletPartyOwnership`, `getWalletRecordOwnership` |
+| Wallet | `listWalletRecords`, `listWalletParties`, `listWalletPendingMemberships`, `listWalletWorks`, `listWalletWorkDetails`, `getWalletBalance`, `getWalletOwnership`, `getWalletPartyOwnership`, `getWalletRecordOwnership` |
 | Works and receipts | `getWork`, `getPurchaseReceipt` |
 
 Older names (`getListing`, `getArtists`, `getWalletRecords`,
@@ -51,6 +51,10 @@ the deprecated compatibility receipt lookup; use
 `getPurchaseReceipt(txDigest, recordId)` to select one exact Record. The legacy
 method throws HTTP 409 when one transaction bought multiple Records from the
 same Pressing.
+
+`getWalletWorkDetails` is the deprecated compatibility alias for
+`listWalletWorkDetails`. Both make one private request to return all three work
+kinds in the typed `WorkDetail[]` shape.
 
 Relationship expansions live in the method options:
 

@@ -10,6 +10,7 @@ import {
   READ_CACHE_CLASS,
 } from "./client.js";
 import { trackViewSchema } from "./schemas.js";
+import type { WorkDetail } from "./types.js";
 
 /** A fetch that records the URL it was called with and replays a canned response. */
 function stubFetch(response: {
@@ -45,6 +46,35 @@ const balance = {
   addressBalance: "40000000",
   decimals: 6,
 };
+
+const workDetails: WorkDetail[] = [
+  {
+    capId: "0x1",
+    kind: "composition",
+    workId: "0x2",
+    title: "Ghost",
+    state: "Published",
+    royaltyRateBps: 500,
+    shareType: "0x3::share::SHARE",
+  },
+  {
+    capId: "0x4",
+    kind: "recording",
+    workId: "0x5",
+    title: "Ghost",
+    state: "Initialized",
+    shareType: "0x6::share::SHARE",
+  },
+  {
+    capId: "0x7",
+    kind: "release",
+    workId: "0x8",
+    title: "Ghost EP",
+    state: "Published",
+    discCount: 1,
+    trackCount: 2,
+  },
+];
 
 describe("URL construction", () => {
   test("mounts reads under the gateway's read prefix", async () => {
@@ -194,6 +224,17 @@ describe("URL construction", () => {
     expect(new URL(calls[1]!).searchParams.get("record")).toBe("0xrecord");
     expect(new URL(calls[1]!).searchParams.has("party")).toBe(false);
   });
+
+  test("lists wallet work details with one fixed bulk request", async () => {
+    const { fetch, calls } = stubFetch({ body: workDetails });
+    const result = await createMisoApiClient({ baseUrl: BASE, fetch })
+      .listWalletWorkDetails("0xabc");
+
+    expect(result).toEqual(workDetails);
+    expect(calls).toEqual([
+      `${BASE}/read/v1/wallets/0xabc/work-details`,
+    ]);
+  });
 });
 
 describe("request options", () => {
@@ -214,6 +255,17 @@ describe("request options", () => {
     expect(headers.get("accept")).toBe("application/json");
     expect(headers.get("authorization")).toBe("Bearer test");
     expect(headers.get("x-client")).toBe("example");
+  });
+
+  test("forwards cancellation options through the bulk work-details read", async () => {
+    const { fetch, initCalls } = stubFetch({ body: workDetails });
+    const controller = new AbortController();
+    await createMisoApiClient({ baseUrl: BASE, fetch }).listWalletWorkDetails(
+      "0xabc",
+      { signal: controller.signal },
+    );
+
+    expect(initCalls[0]?.signal).toBe(controller.signal);
   });
 });
 
@@ -298,6 +350,25 @@ describe("error handling", () => {
     await expect(
       createMisoApiClient({ baseUrl: BASE, fetch }).getWalletRecords("0xabc"),
     ).rejects.toThrow(MisoApiError);
+  });
+
+  test("a stale indexer 503 remains an error rather than becoming null or empty", async () => {
+    const { fetch, calls } = stubFetch({
+      status: 503,
+      body: {
+        error: { code: "indexer_not_ready", message: "Index is refreshing." },
+      },
+      headers: { "Retry-After": "5" },
+    });
+    const error = await createMisoApiClient({ baseUrl: BASE, fetch })
+      .listWalletWorkDetails("0xabc")
+      .catch((value: unknown) => value);
+
+    expect(error).toBeInstanceOf(MisoApiError);
+    expect((error as MisoApiError).status).toBe(503);
+    expect((error as MisoApiError).code).toBe("indexer_not_ready");
+    expect((error as MisoApiError).retryAfter).toBe(5);
+    expect(calls).toHaveLength(1);
   });
 });
 
@@ -410,10 +481,16 @@ describe("contract validation", () => {
 });
 
 describe("READ_CACHE_CLASS", () => {
+  test("classifies both bulk work-details names as private", () => {
+    expect(READ_CACHE_CLASS.listWalletWorkDetails).toBe("private");
+    expect(READ_CACHE_CLASS.getWalletWorkDetails).toBe("private");
+  });
+
   test("every wallet-scoped read is private", () => {
     for (const [method, cls] of Object.entries(READ_CACHE_CLASS)) {
       if (
         method.startsWith("getWallet") ||
+        method.startsWith("listWallet") ||
         method.startsWith("owns") ||
         method === "getBalance" ||
         method === "getWork"
@@ -445,6 +522,7 @@ describe("canonical aliases", () => {
     expect(api.getWalletParties).toBe(api.listWalletParties);
     expect(api.getPendingMemberships).toBe(api.listWalletPendingMemberships);
     expect(api.getWalletWorks).toBe(api.listWalletWorks);
+    expect(api.getWalletWorkDetails).toBe(api.listWalletWorkDetails);
     expect(api.getBalance).toBe(api.getWalletBalance);
     expect(api.ownsParty).toBe(api.getWalletPartyOwnership);
     expect(api.ownsRecord).toBe(api.getWalletRecordOwnership);

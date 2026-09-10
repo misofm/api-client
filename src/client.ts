@@ -387,6 +387,18 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
       nullOn404: true,
     });
 
+  /** One snapshot-consistent read of every work administered by a wallet. */
+  const listWalletWorkDetails = (
+    address: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<WorkDetail[]> =>
+    required(
+      s.workDetailsSchema,
+      `/wallets/${segment(address)}/work-details`,
+      {},
+      opts,
+    );
+
   const getWalletBalance = (
     address: string,
     coinType?: string,
@@ -475,6 +487,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     listWalletPendingMemberships,
     listWalletWorks,
     getWork,
+    listWalletWorkDetails,
     getWalletBalance,
     getWalletOwnership,
     getWalletPartyOwnership,
@@ -493,6 +506,8 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     getPendingMemberships: listWalletPendingMemberships,
     /** @deprecated Use {@link listWalletWorks}. */
     getWalletWorks: listWalletWorks,
+    /** @deprecated Use {@link listWalletWorkDetails}. */
+    getWalletWorkDetails: listWalletWorkDetails,
     /** @deprecated Use {@link getWalletBalance}. */
     getBalance: getWalletBalance,
     /** @deprecated Use {@link getWalletPartyOwnership}. */
@@ -558,6 +573,8 @@ export const READ_CACHE_CLASS = {
   listWalletWorks: "private",
   getWalletWorks: "private",
   getWork: "private",
+  listWalletWorkDetails: "private",
+  getWalletWorkDetails: "private",
   getWalletBalance: "private",
   getBalance: "private",
   getWalletOwnership: "private",

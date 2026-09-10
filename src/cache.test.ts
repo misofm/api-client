@@ -111,6 +111,13 @@ describe("workCacheClass", () => {
   });
 });
 
+describe("wallet work details cache policy", () => {
+  test("uses the private policy for the bulk wallet read", () => {
+    expect(CACHE_POLICIES["private"].staleTimeMs).toBe(0);
+    expect(cacheControl("private")).toBe("private, no-store");
+  });
+});
+
 describe("recordAlbum cache policy", () => {
   test("the unexpanded record-to-release relation is immutable", () => {
     expect(recordAlbumCacheClass({})).toBe("immutable");
