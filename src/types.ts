@@ -35,6 +35,7 @@ export type PendingMembership = z.infer<typeof s.pendingMembershipSchema>;
 export type WorkKind = z.infer<typeof s.workKindSchema>;
 export type OwnedWork = z.infer<typeof s.ownedWorkSchema>;
 export type WorkDetail = z.infer<typeof s.workDetailSchema>;
+export type WorkDetails = z.infer<typeof s.workDetailsSchema>;
 export type Balance = z.infer<typeof s.balanceSchema>;
 export type Ownership = z.infer<typeof s.ownershipSchema>;
 

@@ -369,6 +369,9 @@ export const workDetailSchema = ownedWorkSchema.extend({
   trackCount: z.number().int().min(0).optional(),
 });
 
+/** Details for every currently administered work in one wallet read. */
+export const workDetailsSchema = z.array(workDetailSchema);
+
 export const balanceSchema = z
   .object({
     address: suiIdSchema,
