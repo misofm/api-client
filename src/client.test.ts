@@ -656,3 +656,18 @@ describe("royalty claims", () => {
     );
   });
 });
+
+describe("release description", () => {
+  const release = {
+    id: "0x1", title: "Release", subtitle: null, kind: null,
+    state: { type: "Published", timestampMs: 123 }, publishedAtMs: 123, cover: null, credits: [],
+    primaryArtists: [], discCount: 0, tracks: [],
+  };
+  for (const description of ["Behind the songs.\n制作の物語。", null, undefined]) {
+    test(`preserves description and accepts older responses (${description === undefined ? "omitted" : description === null ? "null" : "text"})`, async () => {
+      const { fetch } = stubFetch({ body: { ...release, ...(description === undefined ? {} : { description }) } });
+      const result = await createMisoApiClient({ baseUrl: BASE, fetch }).getRelease("0x1");
+      expect(result?.description).toBe(description ?? null);
+    });
+  }
+});

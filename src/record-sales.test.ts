@@ -34,6 +34,7 @@ const detail = {
     id: "0x3",
     title: "Album",
     subtitle: null,
+      description: null,
     kind: null,
     state: { type: "Initialized" as const },
     publishedAtMs: null,

@@ -147,6 +147,7 @@ export const trackCreditsSchema = trackCreditsWireSchema.transform((credits) =>
 const releaseDetailBaseSchema = z.object({
   id: suiIdSchema,
   title: z.string(),
+  description: z.string().nullable().default(null),
   subtitle: z.string().nullable(),
   /** Self-declared `release_kind`, or null when the extension is absent. */
   kind: z.string().nullable(),
