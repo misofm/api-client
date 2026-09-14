@@ -52,10 +52,28 @@ export const workStateSchema = z.union([
   z.object({ type: z.literal("Published"), timestampMs: z.number().int() }),
 ]);
 
-export const coverImageSchema = z.object({
-  kind: z.enum(["blob", "quiltPatch"]),
-  /** Aggregator URL — the only field a renderer needs. */
-  url: z.string().url(),
+/** Blob references are canonical. The URL branch accepts responses cached before the cutover. */
+export const coverImageSchema = z.union([
+  z.object({ kind: z.literal("blob"), blobId: walrusBlobIdSchema }),
+  z.object({ kind: z.enum(["blob", "quiltPatch"]), url: z.string().url() }),
+]);
+
+const bytesSchema = z.array(z.number().int().min(0).max(255));
+/** Complete on-chain Audio payload, preserving decimal integers and confidentiality. */
+export const recordingMasterSchema = z.object({
+  format: z.string(),
+  channels: z.number().int().min(0).max(255),
+  bit_depth: z.number().int().min(0).max(255),
+  sample_rate_hz: z.number().int().nonnegative(),
+  samples: z.string().regex(/^[0-9]+$/),
+  pcm_digest: bytesSchema,
+  data: z.object({
+    blob_id: z.string().regex(/^[0-9]+$/),
+    confidentiality: z.union([
+      z.object({ $kind: z.literal("Unencrypted"), Unencrypted: z.literal(true) }),
+      z.object({ $kind: z.literal("Encrypted"), Encrypted: z.object({ sealed_dek: bytesSchema }) }),
+    ]),
+  }),
 });
 
 export const coverSchema = z.object({
@@ -105,6 +123,7 @@ export const trackViewSchema = z.object({
   splitBps: z.number().int().min(0).max(10_000),
   disc: z.number().int().min(1),
   /** Archival master attached through recording_master_reference, when present. */
+  master: recordingMasterSchema.optional(),
   masterBlobId: walrusBlobIdSchema.optional(),
   /**
    * The `miso-hls/v1` streaming transcode Quilt attached through
