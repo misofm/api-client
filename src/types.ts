@@ -13,6 +13,7 @@ export type Cover = z.infer<typeof s.coverSchema>;
 export type Credit = z.infer<typeof s.creditSchema>;
 export type RecordingView = z.infer<typeof s.recordingViewSchema>;
 export type CompositionView = z.infer<typeof s.compositionViewSchema>;
+export type RecordingMaster = z.infer<typeof s.recordingMasterSchema>;
 export type TrackView = z.infer<typeof s.trackViewSchema>;
 
 export type ReleaseDetail = z.infer<typeof s.releaseDetailSchema>;
