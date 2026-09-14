@@ -101,6 +101,8 @@ export const trackEngineSessionSchema = z.object({
 
 /** Full core recording object. Audio attachments are exposed on the track. */
 export const recordingViewSchema = z.object({
+  /** Canonical recording share type; optional for cached responses. */
+  shareType: z.string().optional(),
   id: suiIdSchema,
   state: workStateSchema,
   compositionId: suiIdSchema,
