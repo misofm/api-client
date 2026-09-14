@@ -41,6 +41,7 @@ const detail = {
     cover: null,
     credits: [],
     primaryArtists: [],
+    genres: [],
     discCount: 0,
     tracks: [],
   },

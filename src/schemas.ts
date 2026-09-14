@@ -174,6 +174,8 @@ const releaseDetailBaseSchema = z.object({
   credits: z.array(creditSchema),
   /** The release's primary artists in chain order — its artist line. */
   primaryArtists: z.array(z.string()),
+  /** Ordered display names, primary genre first. Defaults for older API responses. */
+  genres: z.array(z.string()).default([]),
   discCount: z.number().int().min(0),
   tracks: z.array(trackViewSchema),
 });

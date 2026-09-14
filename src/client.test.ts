@@ -671,3 +671,23 @@ describe("release description", () => {
     });
   }
 });
+
+describe("release genres", () => {
+  const release = {
+    id: "0x1", title: "Release", subtitle: null, description: null, kind: null,
+    state: { type: "Published", timestampMs: 123 }, publishedAtMs: 123, cover: null, credits: [],
+    primaryArtists: [], discCount: 0, tracks: [],
+  };
+
+  test("preserves ordered genres with the primary first", async () => {
+    const { fetch } = stubFetch({ body: { ...release, genres: ["Electronic", "Alternative"] } });
+    const result = await createMisoApiClient({ baseUrl: BASE, fetch }).getRelease("0x1");
+    expect(result?.genres).toEqual(["Electronic", "Alternative"]);
+  });
+
+  test("defaults genres for an older response", async () => {
+    const { fetch } = stubFetch({ body: release });
+    const result = await createMisoApiClient({ baseUrl: BASE, fetch }).getRelease("0x1");
+    expect(result?.genres).toEqual([]);
+  });
+});
