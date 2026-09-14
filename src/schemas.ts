@@ -81,11 +81,28 @@ export const trackEngineSessionSchema = z.object({
   stems: z.array(z.object({ digest: stemDigestSchema, blobId: walrusBlobIdSchema })),
 });
 
+/** Full core recording object. Audio attachments are exposed on the track. */
+export const recordingViewSchema = z.object({
+  id: suiIdSchema,
+  state: workStateSchema,
+  compositionId: suiIdSchema,
+});
+
+export const compositionViewSchema = z.object({
+  id: suiIdSchema,
+  state: workStateSchema,
+  title: z.string(),
+  royaltyRate: z.object({ value: z.number().int().min(0).max(10_000) }),
+});
+
 export const trackViewSchema = z.object({
   /** Display number — "1", or "1.2" (disc.track) on a multi-disc set. */
   no: z.string(),
   title: z.string(),
   recordingId: suiIdSchema,
+  /** Full referenced objects; null when unavailable. Optional for older API deployments. */
+  recording: recordingViewSchema.nullable().optional(),
+  composition: compositionViewSchema.nullable().optional(),
   /** The composition underlying this track's recording. */
   compositionId: suiIdSchema,
   /** This track's share of the release's revenue, in basis points. */
