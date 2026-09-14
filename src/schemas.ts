@@ -99,12 +99,8 @@ export const trackViewSchema = z.object({
   /** Display number — "1", or "1.2" (disc.track) on a multi-disc set. */
   no: z.string(),
   title: z.string(),
-  recordingId: suiIdSchema,
-  /** Full referenced objects; null when unavailable. Optional for older API deployments. */
-  recording: recordingViewSchema.nullable().optional(),
-  composition: compositionViewSchema.nullable().optional(),
-  /** The composition underlying this track's recording. */
-  compositionId: suiIdSchema,
+  recording: recordingViewSchema,
+  composition: compositionViewSchema,
   /** This track's share of the release's revenue, in basis points. */
   splitBps: z.number().int().min(0).max(10_000),
   disc: z.number().int().min(1),

@@ -377,8 +377,8 @@ describe("contract validation", () => {
     const track = {
       no: "1",
       title: "Ghost",
-      recordingId: "0x1",
-      compositionId: "0x2",
+      recording: { id: "0x1", state: { type: "Published" as const, timestampMs: 1 }, compositionId: "0x2" },
+      composition: { id: "0x2", state: { type: "Published" as const, timestampMs: 1 }, title: "Ghost", royaltyRate: { value: 2_000 } },
       splitBps: 10_000,
       disc: 1,
       masterBlobId: "VwMOwKRnoRohGqEfRvE_21IUqOLaBp7pbyXnwD68UAE",
