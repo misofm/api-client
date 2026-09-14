@@ -19,3 +19,9 @@ test("validates nested object fields", () => {
   expect(trackViewSchema.safeParse({ ...track, composition: { ...composition, royaltyRate: { value: 10001 } } }).success).toBe(false);
   expect(trackViewSchema.safeParse({ ...track, recording: { ...recording, compositionId: "invalid" } }).success).toBe(false);
 });
+
+test("preserves the recording share type and accepts older cached recordings", () => {
+  const value = { ...track, recording: { ...recording, shareType: "0x3::share::Share" }, composition };
+  expect(trackViewSchema.parse(value)).toEqual(value);
+  expect(trackViewSchema.parse({ ...track, recording, composition }).recording).not.toHaveProperty("shareType");
+});
