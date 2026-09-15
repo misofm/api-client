@@ -373,7 +373,7 @@ describe("error handling", () => {
 });
 
 describe("contract validation", () => {
-  test("preserves and validates a track's optional Walrus audio blob ids", () => {
+  test("preserves and validates a track's optional plain Walrus audio blob ids", () => {
     const track = {
       no: "1",
       title: "Ghost",
@@ -392,14 +392,10 @@ describe("contract validation", () => {
           },
         ],
       },
-      mixBlobId: "1wMOwKRnoRohGqEfRvE_21IUqOLaBp7pbyXnwD68UAE",
     };
     expect(trackViewSchema.parse(track)).toEqual(track);
     expect(() =>
       trackViewSchema.parse({ ...track, masterBlobId: "not-a-blob-id" }),
-    ).toThrow();
-    expect(() =>
-      trackViewSchema.parse({ ...track, mixBlobId: "not-a-blob-id" }),
     ).toThrow();
     expect(() =>
       trackViewSchema.parse({ ...track, transcodeQuiltId: "not-a-quilt-id" }),
@@ -409,9 +405,6 @@ describe("contract validation", () => {
         ...track,
         engineSession: { ...track.engineSession, stems: [{ digest: "SHA", blobId: track.masterBlobId }] },
       }),
-    ).toThrow();
-    expect(() =>
-      trackViewSchema.parse({ ...track, mixBlobId: `${track.mixBlobId.slice(0, -1)}B` }),
     ).toThrow();
   });
 

@@ -130,18 +130,6 @@ export const trackViewSchema = z.object({
   transcodeQuiltId: walrusBlobIdSchema.optional(),
   /** The Miso Engine session attached through recording_engine_session, when present. */
   engineSession: trackEngineSessionSchema.optional(),
-  /**
-   * Encrypted mix delivery descriptor attached to this release track, when present.
-   *
-   * This is a discovery hint. A client using it for protected playback must compare
-   * it with the authoritative release-track reference on Sui before trusting the
-   * descriptor or requesting a Seal key.
-   */
-  mixBlobId: walrusBlobIdSchema
-    .describe(
-      "Discovery hint only. Before Walrus or Seal use, compare this blob ID with the authoritative release-track reference read directly from Sui.",
-    )
-    .optional(),
 });
 
 /** A recording's work-role credits and recording billing positions. */
