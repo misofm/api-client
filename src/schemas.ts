@@ -59,7 +59,7 @@ export const coverImageSchema = z.union([
 ]);
 
 const bytesSchema = z.array(z.number().int().min(0).max(255));
-/** Complete on-chain Audio payload, preserving decimal integers and confidentiality. */
+/** Complete on-chain Audio payload with a plain Walrus blob id. */
 export const recordingMasterSchema = z.object({
   format: z.string(),
   channels: z.number().int().min(0).max(255),
@@ -67,13 +67,8 @@ export const recordingMasterSchema = z.object({
   sample_rate_hz: z.number().int().nonnegative(),
   samples: z.string().regex(/^[0-9]+$/),
   pcm_digest: bytesSchema,
-  data: z.object({
-    blob_id: z.string().regex(/^[0-9]+$/),
-    confidentiality: z.union([
-      z.object({ $kind: z.literal("Unencrypted"), Unencrypted: z.literal(true) }),
-      z.object({ $kind: z.literal("Encrypted"), Encrypted: z.object({ sealed_dek: bytesSchema }) }),
-    ]),
-  }),
+  /** The Walrus blob id encoded as a decimal u256 string. */
+  blob_id: z.string().regex(/^[0-9]+$/),
 });
 
 export const coverSchema = z.object({
