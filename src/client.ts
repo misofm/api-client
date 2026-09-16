@@ -120,8 +120,9 @@ export interface MisoApiClientOptions {
   /** Injectable for tests, Workers, and anything with its own fetch. */
   fetch?: typeof globalThis.fetch;
   /**
-   * Path the read endpoints are mounted under on `baseUrl`. The gateway routes
-   * `/read/*` to the read service, whose own routes are rooted at `/v1`.
+   * Path the API endpoints are mounted under on `baseUrl`. The public gateway
+   * uses `/v1` for the canonical resource surface. Set this when talking to a
+   * legacy gateway or a service mounted at a different prefix.
    */
   prefix?: string;
 }
@@ -176,7 +177,7 @@ function requestHeaders(input?: HeadersInit): HeadersInit {
 
 export function createMisoApiClient(options: MisoApiClientOptions) {
   const base = options.baseUrl.replace(/\/$/, "");
-  const prefix = options.prefix ?? "/read/v1";
+  const prefix = (options.prefix ?? "/v1").replace(/\/$/, "");
   const doFetch = options.fetch ?? globalThis.fetch.bind(globalThis);
 
   function url(
@@ -382,7 +383,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     capId: string,
     opts: MisoRequestOptions = {},
   ): Promise<WorkDetail | null> =>
-    request(s.workDetailSchema, `/works/${segment(capId)}`, {}, {
+    request(s.workDetailSchema, `/work-capabilities/${segment(capId)}/work`, {}, {
       ...opts,
       nullOn404: true,
     });
@@ -418,7 +419,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<Ownership> =>
     required(
       s.ownershipSchema,
-      `/wallets/${segment(address)}/owns`,
+      `/wallets/${segment(address)}/ownership`,
       { party: partyId },
       opts,
     );
@@ -430,7 +431,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<Ownership> =>
     required(
       s.ownershipSchema,
-      `/wallets/${segment(address)}/owns`,
+      `/wallets/${segment(address)}/ownership`,
       {
         party: target.partyId,
         record: target.recordId,
@@ -445,7 +446,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<Ownership> =>
     required(
       s.ownershipSchema,
-      `/wallets/${segment(address)}/owns`,
+      `/wallets/${segment(address)}/ownership`,
       { record: recordId },
       opts,
     );
@@ -457,7 +458,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<PurchaseReceipt | null> =>
     request(
       s.purchaseReceiptSchema,
-      `/receipts/${segment(txDigest)}/${segment(recordId)}`,
+      `/transactions/${segment(txDigest)}/receipts/${segment(recordId)}`,
       {},
       { ...opts, nullOn404: true },
     );
@@ -516,8 +517,10 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     ownsRecord: getWalletRecordOwnership,
     /**
      * @deprecated Compatibility route keyed by pressingId and txDigest. It
-     * throws HTTP 409 when a transaction bought two Records from one Pressing.
-     * Use {@link getPurchaseReceipt} with the exact recordId.
+     * intentionally remains on the legacy `/receipts/:pressingId/:txDigest`
+     * path during the v1 migration and throws HTTP 409 when a transaction
+     * bought two Records from one Pressing. Use {@link getPurchaseReceipt}
+     * with the exact recordId.
      */
     getReceipt,
   };

@@ -77,10 +77,10 @@ const workDetails: WorkDetail[] = [
 ];
 
 describe("URL construction", () => {
-  test("mounts reads under the gateway's read prefix", async () => {
+  test("mounts resources under the public v1 prefix by default", async () => {
     const { fetch, calls } = stubFetch({ body: balance });
     await createMisoApiClient({ baseUrl: BASE, fetch }).getBalance("0xabc");
-    expect(calls[0]).toBe(`${BASE}/read/v1/wallets/0xabc/balance`);
+    expect(calls[0]).toBe(`${BASE}/v1/wallets/0xabc/balance`);
   });
 
   test("tolerates a trailing slash on the base URL", async () => {
@@ -88,7 +88,7 @@ describe("URL construction", () => {
     await createMisoApiClient({ baseUrl: `${BASE}/`, fetch }).getBalance(
       "0xabc",
     );
-    expect(calls[0]).toBe(`${BASE}/read/v1/wallets/0xabc/balance`);
+    expect(calls[0]).toBe(`${BASE}/v1/wallets/0xabc/balance`);
   });
 
   test("omits empty query params rather than sending them blank", async () => {
@@ -165,7 +165,7 @@ describe("URL construction", () => {
       "0x2::sui::SUI",
     );
     expect(calls[0]).toBe(
-      `${BASE}/read/v1/pressings/0xp/listing?currencyType=0x2%3A%3Asui%3A%3ASUI`,
+      `${BASE}/v1/pressings/0xp/listing?currencyType=0x2%3A%3Asui%3A%3ASUI`,
     );
   });
 
@@ -179,6 +179,16 @@ describe("URL construction", () => {
     expect(calls[0]).toBe(`${BASE}/v1/wallets/0xabc/balance`);
   });
 
+  test("retains a legacy or service-specific prefix exactly when configured", async () => {
+    const { fetch, calls } = stubFetch({ body: balance });
+    await createMisoApiClient({
+      baseUrl: BASE,
+      fetch,
+      prefix: "/read/v1/",
+    }).getWalletBalance("0xabc");
+    expect(calls[0]).toBe(`${BASE}/read/v1/wallets/0xabc/balance`);
+  });
+
   for (const value of [
     "../../health",
     "0x1?admin=true",
@@ -189,7 +199,7 @@ describe("URL construction", () => {
       const { fetch, calls } = stubFetch({ status: 404 });
       await createMisoApiClient({ baseUrl: BASE, fetch }).getPressing(value);
       expect(new URL(calls[0]!).pathname).toBe(
-        `/read/v1/pressings/${encodeURIComponent(value)}`,
+        `/v1/pressings/${encodeURIComponent(value)}`,
       );
       expect(new URL(calls[0]!).search).toBe("");
       expect(new URL(calls[0]!).hash).toBe("");
@@ -201,7 +211,7 @@ describe("URL construction", () => {
       const { fetch, calls } = stubFetch({ status: 404 });
       await createMisoApiClient({ baseUrl: BASE, fetch }).getPressing(value);
       const pathname = new URL(calls[0]!).pathname;
-      expect(pathname.startsWith("/read/v1/pressings/")).toBe(true);
+      expect(pathname.startsWith("/v1/pressings/")).toBe(true);
       expect(pathname).toContain("%252E");
     });
   }
@@ -221,13 +231,13 @@ describe("URL construction", () => {
     await api.listWalletRecords(hostile).catch(() => undefined);
 
     expect(calls.map((call) => new URL(call).pathname)).toEqual([
-      `/read/v1/pressings/${encoded}/listing`,
-      `/read/v1/releases/${encoded}`,
-      `/read/v1/records/${encoded}/album`,
-      `/read/v1/artists/${encoded}`,
-      `/read/v1/works/${encoded}`,
-      `/read/v1/receipts/${encoded}/${encoded}`,
-      `/read/v1/wallets/${encoded}/records`,
+      `/v1/pressings/${encoded}/listing`,
+      `/v1/releases/${encoded}`,
+      `/v1/records/${encoded}/album`,
+      `/v1/artists/${encoded}`,
+      `/v1/work-capabilities/${encoded}/work`,
+      `/v1/transactions/${encoded}/receipts/${encoded}`,
+      `/v1/wallets/${encoded}/records`,
     ]);
   });
 
@@ -237,8 +247,8 @@ describe("URL construction", () => {
     await api.getPurchaseReceipt("digest", "0xrecord");
     await api.getReceipt("0xpressing", "digest");
     expect(calls.map((call) => new URL(call).pathname)).toEqual([
-      "/read/v1/receipts/digest/0xrecord",
-      "/read/v1/receipts/0xpressing/digest",
+      "/v1/transactions/digest/receipts/0xrecord",
+      "/v1/receipts/0xpressing/digest",
     ]);
   });
 
@@ -249,6 +259,8 @@ describe("URL construction", () => {
     const api = createMisoApiClient({ baseUrl: BASE, fetch });
     await api.getWalletOwnership("0xabc", { partyId: "0xparty" });
     await api.getWalletOwnership("0xabc", { recordId: "0xrecord" });
+    expect(new URL(calls[0]!).pathname).toBe("/v1/wallets/0xabc/ownership");
+    expect(new URL(calls[1]!).pathname).toBe("/v1/wallets/0xabc/ownership");
     expect(new URL(calls[0]!).searchParams.get("party")).toBe("0xparty");
     expect(new URL(calls[0]!).searchParams.has("record")).toBe(false);
     expect(new URL(calls[1]!).searchParams.get("record")).toBe("0xrecord");
@@ -262,7 +274,7 @@ describe("URL construction", () => {
 
     expect(result).toEqual(workDetails);
     expect(calls).toEqual([
-      `${BASE}/read/v1/wallets/0xabc/work-details`,
+      `${BASE}/v1/wallets/0xabc/work-details`,
     ]);
   });
 });
@@ -662,12 +674,12 @@ describe("royalty claims", () => {
     const { fetch, calls } = stubFetch({ body: page });
     const api = createMisoApiClient({ baseUrl: BASE, fetch });
     const first = await api.listWalletRoyaltyClaims("0xabc");
-    expect(calls[0]).toBe(`${BASE}/read/v1/wallets/0xabc/royalty-claims`);
+    expect(calls[0]).toBe(`${BASE}/v1/wallets/0xabc/royalty-claims`);
     expect(first.claims[0]?.entries[0]?.amount).toBe("23800000");
 
     await api.listWalletRoyaltyClaims("0xabc", { before: first.nextCursor, limit: 20 });
     expect(calls[1]).toBe(
-      `${BASE}/read/v1/wallets/0xabc/royalty-claims?before=KAFCCggAEMSQr%2BoOGAU%3D&limit=20`,
+      `${BASE}/v1/wallets/0xabc/royalty-claims?before=KAFCCggAEMSQr%2BoOGAU%3D&limit=20`,
     );
   });
 
