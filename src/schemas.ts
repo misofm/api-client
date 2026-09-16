@@ -303,6 +303,12 @@ export const partyLinkSchema = z.object({
 
 export const partyCtaSchema = z.object({ label: z.string(), url: z.string() });
 
+/** Exact on-chain artist-role identity. Canonical and same-named custom roles are distinct. */
+export const artistRoleSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.enum(["artist", "producer", "dj", "composer", "songwriter", "band", "label", "collective"]) }),
+  z.object({ kind: z.literal("custom"), name: z.string() }),
+]);
+
 export const artistProfileSchema = z.object({
   id: suiIdSchema,
   kind: z.enum(["individual", "group"]),
@@ -319,6 +325,8 @@ export const artistProfileSchema = z.object({
   members: z.array(partyMemberSchema),
   /** Present only when requested via `include` — the owner-editor fields. */
   roles: z.array(z.string()).optional(),
+  /** Exact identities for role editing. Older servers may omit this additive field. */
+  roleValues: z.array(artistRoleSchema).optional(),
   tags: z.array(z.string()).optional(),
   avatarUrl: z.string().url(),
 });

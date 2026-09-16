@@ -29,6 +29,7 @@ export type PartyMember = z.infer<typeof s.partyMemberSchema>;
 export type PlatformKey = z.infer<typeof s.platformKeySchema>;
 export type PartyLink = z.infer<typeof s.partyLinkSchema>;
 export type PartyCta = z.infer<typeof s.partyCtaSchema>;
+export type ArtistRole = z.infer<typeof s.artistRoleSchema>;
 export type ArtistProfile = z.infer<typeof s.artistProfileSchema>;
 export type PartySummary = z.infer<typeof s.partySummarySchema>;
 
