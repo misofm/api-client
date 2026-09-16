@@ -117,6 +117,36 @@ describe("URL construction", () => {
     expect(calls[0]).toContain("include=roles%2Ctags");
   });
 
+  test("preserves canonical and same-named custom role identities", async () => {
+    const { fetch } = stubFetch({
+      body: {
+        id: "0x1",
+        kind: "individual",
+        name: "Role Test",
+        createdAtMs: 1,
+        bioShort: null,
+        bioLong: null,
+        country: null,
+        languages: [],
+        genres: [],
+        links: [],
+        ctas: [],
+        members: [],
+        roles: ["Artist", "Artist"],
+        roleValues: [{ kind: "artist" }, { kind: "custom", name: "Artist" }],
+        tags: [],
+        avatarUrl: "https://api.test/media/avatar/0x1",
+      },
+    });
+    const artist = await createMisoApiClient({ baseUrl: BASE, fetch }).getArtist("0x1", {
+      include: ["roles", "tags"],
+    });
+    expect(artist?.roleValues).toEqual([
+      { kind: "artist" },
+      { kind: "custom", name: "Artist" },
+    ]);
+  });
+
   test("joins catalog relationship expansions into one param", async () => {
     const { fetch, calls } = stubFetch({ status: 404 });
     const client = createMisoApiClient({ baseUrl: BASE, fetch });
