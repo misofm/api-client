@@ -22,6 +22,7 @@ import type {
   RecordAlbum,
   ReleaseDetail,
   RoyaltyClaimsPage,
+  RoyaltyStakesPage,
   WorkDetail,
   CompositionView,
   CompositionLyrics,
@@ -367,6 +368,14 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
    * index behind this keeps a bounded window; `availableFromMs` says how far
    * back it reaches.
    */
+  const listWalletStakes = (
+    address: string,
+    page: { cursor?: string | null; limit?: number; include?: readonly "work"[] } = {},
+    opts: MisoRequestOptions = {},
+  ): Promise<RoyaltyStakesPage> =>
+    required(s.royaltyStakesPageSchema, `/protocol/wallets/${segment(address)}/stakes`,
+      { cursor: page.cursor ?? undefined, limit: page.limit, include: page.include?.join(",") }, opts);
+
   const listWalletRoyaltyClaims = (
     address: string,
     page: { before?: string | null; limit?: number } = {},
@@ -492,6 +501,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     listArtists,
     listWalletRecords,
     listWalletRoyaltyClaims,
+    listWalletStakes,
     listWalletParties,
     listWalletPendingMemberships,
     listWalletWorks,
@@ -569,6 +579,7 @@ export const READ_CACHE_CLASS = {
   getArtists: "artist",
   listWalletRecords: "private",
   listWalletRoyaltyClaims: "private",
+  listWalletStakes: "private",
   getWalletRecords: "private",
   listWalletParties: "private",
   getWalletParties: "private",

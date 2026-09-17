@@ -52,3 +52,6 @@ export type ApiErrorBody = z.infer<typeof s.apiErrorSchema>;
 export type RoyaltyClaimEntry = z.infer<typeof s.royaltyClaimEntrySchema>;
 export type RoyaltyClaim = z.infer<typeof s.royaltyClaimSchema>;
 export type RoyaltyClaimsPage = z.infer<typeof s.royaltyClaimsPageSchema>;
+export type RoyaltyStake = z.infer<typeof s.royaltyStakeSchema>;
+export type RoyaltyStakeWork = z.infer<typeof s.royaltyStakeWorkSchema>;
+export type RoyaltyStakesPage = z.infer<typeof s.royaltyStakesPageSchema>;

@@ -497,6 +497,31 @@ export const apiErrorSchema = z.object({
 
 // ── Royalty claims ───────────────────────────────────────────────────────────
 
+export const royaltyStakeWorkSchema = z.object({
+  kind: z.enum(["composition", "recording"]),
+  workId: suiIdSchema,
+  title: z.string(),
+  shareType: z.string(),
+});
+
+export const royaltyStakeSchema = z.object({
+  id: suiIdSchema,
+  shareType: z.string(),
+  balance: z.string().regex(/^\d+$/),
+  registrations: z.array(z.object({
+    currencyType: z.string(),
+    poolId: suiIdSchema,
+    debt: z.string().regex(/^\d+$/),
+  })),
+  /** Present only with include=work; null when no genuine protocol work matches. */
+  work: royaltyStakeWorkSchema.nullable().optional(),
+});
+
+export const royaltyStakesPageSchema = z.object({
+  stakes: z.array(royaltyStakeSchema),
+  nextCursor: z.string().nullable(),
+});
+
 /** One pool swept by a royalty claim transaction. */
 export const royaltyClaimEntrySchema = z.object({
   poolId: suiIdSchema,

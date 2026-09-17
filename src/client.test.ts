@@ -38,6 +38,26 @@ function stubFetch(response: {
 
 const BASE = "https://api.testnet.miso.fm";
 
+describe("wallet stakes", () => {
+  test("supports pagination, optional work metadata and cancellation", async () => {
+    const page = { stakes: [{ id: "0x1", shareType: "0x2::share::Share", balance: "123", registrations: [], work: null }], nextCursor: "next" };
+    const stub = stubFetch({ body: page });
+    const api = createMisoApiClient({ baseUrl: BASE, fetch: stub.fetch });
+    const signal = new AbortController().signal;
+    expect(await api.listWalletStakes("0xabc", { cursor: "a+b=", limit: 20, include: ["work"] }, { signal })).toEqual(page);
+    const url = new URL(stub.calls[0]!);
+    expect(url.pathname).toBe("/v1/protocol/wallets/0xabc/stakes");
+    expect(url.searchParams.get("cursor")).toBe("a+b=");
+    expect(url.searchParams.get("include")).toBe("work");
+    expect(stub.initCalls[0]!.signal).toBe(signal);
+    expect(READ_CACHE_CLASS.listWalletStakes).toBe("private");
+  });
+  test("rejects malformed balances", async () => {
+    const stub = stubFetch({ body: { stakes: [{ id: "0x1", shareType: "x", balance: -1, registrations: [] }], nextCursor: null } });
+    await expect(createMisoApiClient({ baseUrl: BASE, fetch: stub.fetch }).listWalletStakes("0xabc")).rejects.toBeInstanceOf(MisoApiContractError);
+  });
+});
+
 describe("modular protocol reads", () => {
   const composition = { id: "0x1", title: "Song", state: { type: "Published" as const, timestampMs: 123 }, royaltyRate: { value: 1000 } };
   const recording = { id: "0x2", compositionId: "0x1", state: composition.state };
