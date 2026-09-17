@@ -32,6 +32,16 @@ if (pressing) {
 Reads for resources that may legitimately be absent return `null` on 404.
 Collection and required wallet reads return their body or throw.
 
+Version 0.17 uses the public `/v1` resource namespace by default. The canonical
+ownership, work, and purchase-receipt methods request `/wallets/:address/ownership`,
+`/work-capabilities/:capId/work`, and
+`/transactions/:digest/receipts/:recordId`. Configure `prefix` when the API is
+mounted under a different path (for example, a direct service or the old
+`/read/v1` gateway mount); it does not restore the old resource names. The
+deprecated `getReceipt(pressingId,
+txDigest)` helper remains on its explicit legacy `/receipts/:pressingId/:txDigest`
+route.
+
 ## Methods
 
 Singular resources use `get…`; collections use `list…`:
