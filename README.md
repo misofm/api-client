@@ -48,6 +48,7 @@ Singular resources use `get…`; collections use `list…`:
 
 | Area | Canonical methods |
 | --- | --- |
+| Works by ID | `getComposition`, `getRecording` (basic metadata; no credits or media) |
 | Catalog | `getPressing`, `getPressingListing`, `getRelease`, `getRecordAlbum` |
 | Artists | `getArtist`, `listArtists` |
 | Wallet | `listWalletRecords`, `listWalletParties`, `listWalletPendingMemberships`, `listWalletWorks`, `listWalletWorkDetails`, `getWalletBalance`, `getWalletOwnership`, `getWalletPartyOwnership`, `getWalletRecordOwnership` |

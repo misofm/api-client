@@ -43,6 +43,7 @@
   "scripts": {
     "build": "node ./scripts/clean.mjs && tsc -p tsconfig.build.json",
     "prepack": "npm run build",
+    "prepare": "npm run build",
     "pack:check": "node ./scripts/verify-package.mjs",
     "test": "bun test",
     "typecheck": "tsc --noEmit"

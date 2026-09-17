@@ -110,6 +110,14 @@ export const compositionViewSchema = z.object({
   royaltyRate: z.object({ value: z.number().int().min(0).max(10_000) }),
 });
 
+/** Basic metadata by work ID, without credits, media, or economic terms. */
+export const compositionMetadataSchema = compositionViewSchema.pick({
+  id: true, title: true, state: true,
+});
+export const recordingMetadataSchema = recordingViewSchema.pick({
+  id: true, compositionId: true, state: true,
+});
+
 export const trackViewSchema = z.object({
   /** Display number — "1", or "1.2" (disc.track) on a multi-disc set. */
   no: z.string(),
