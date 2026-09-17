@@ -121,8 +121,7 @@ export interface MisoApiClientOptions {
   fetch?: typeof globalThis.fetch;
   /**
    * Path the API endpoints are mounted under on `baseUrl`. The public gateway
-   * uses `/v1` for the canonical resource surface. Set this when talking to a
-   * legacy gateway or a service mounted at a different prefix.
+   * uses `/v1`, followed by the protocol or platform resource namespace.
    */
   prefix?: string;
 }
@@ -261,7 +260,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     pressingId: string,
     opts: MisoRequestOptions = {},
   ): Promise<PressingView | null> =>
-    request(s.pressingViewSchema, `/pressings/${segment(pressingId)}`, {}, {
+    request(s.pressingViewSchema, `/platform/pressings/${segment(pressingId)}`, {}, {
       ...opts,
       nullOn404: true,
       mutable: true,
@@ -274,7 +273,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<ListingView | null> =>
     request(
       s.listingViewSchema,
-      `/pressings/${segment(pressingId)}/listing`,
+      `/platform/pressings/${segment(pressingId)}/listing`,
       { currencyType },
       { ...opts, nullOn404: true, mutable: true },
     );
@@ -285,7 +284,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<ReleaseDetail | null> =>
     request(
       s.releaseDetailSchema,
-      `/releases/${segment(releaseId)}`,
+      `/protocol/releases/${segment(releaseId)}`,
       { include: opts.include?.join(",") },
       { ...opts, nullOn404: true, mutable: true },
     );
@@ -298,7 +297,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<RecordAlbum | null> =>
     request(
       s.recordAlbumSchema,
-      `/records/${segment(recordId)}/album`,
+      `/platform/records/${segment(recordId)}/album`,
       { include: opts.include?.join(",") },
       {
         ...opts,
@@ -316,7 +315,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<ArtistProfile | null> =>
     request(
       s.artistProfileSchema,
-      `/artists/${segment(partyId)}`,
+      `/platform/artists/${segment(partyId)}`,
       { include: opts.include?.join(",") },
       { ...opts, nullOn404: true, mutable: true },
     );
@@ -327,7 +326,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<PartySummary[]> =>
     ids.length === 0
       ? Promise.resolve([])
-      : required(s.partySummariesSchema, "/artists", { ids: ids.join(",") }, {
+      : required(s.partySummariesSchema, "/platform/artists", { ids: ids.join(",") }, {
           ...opts,
           mutable: true,
         });
@@ -336,13 +335,13 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     address: string,
     opts: MisoRequestOptions = {},
   ): Promise<OwnedRecord[]> =>
-    required(s.ownedRecordsSchema, `/wallets/${segment(address)}/records`, {}, opts);
+    required(s.ownedRecordsSchema, `/platform/wallets/${segment(address)}/records`, {}, opts);
 
   const listWalletParties = (
     address: string,
     opts: MisoRequestOptions = {},
   ): Promise<OwnedParty[]> =>
-    required(s.ownedPartiesSchema, `/wallets/${segment(address)}/parties`, {}, opts);
+    required(s.ownedPartiesSchema, `/platform/wallets/${segment(address)}/parties`, {}, opts);
 
   /**
    * The wallet's royalty claim transactions, newest first, one page at a time.
@@ -357,7 +356,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<RoyaltyClaimsPage> =>
     required(
       s.royaltyClaimsPageSchema,
-      `/wallets/${segment(address)}/royalty-claims`,
+      `/protocol/wallets/${segment(address)}/royalty-claims`,
       { before: page.before ?? undefined, limit: page.limit },
       opts,
     );
@@ -368,7 +367,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<PendingMembership[]> =>
     required(
       s.pendingMembershipsSchema,
-      `/wallets/${segment(address)}/pending-memberships`,
+      `/platform/wallets/${segment(address)}/pending-memberships`,
       {},
       opts,
     );
@@ -377,13 +376,13 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     address: string,
     opts: MisoRequestOptions = {},
   ): Promise<OwnedWork[]> =>
-    required(s.ownedWorksSchema, `/wallets/${segment(address)}/works`, {}, opts);
+    required(s.ownedWorksSchema, `/protocol/wallets/${segment(address)}/works`, {}, opts);
 
   const getWork = (
     capId: string,
     opts: MisoRequestOptions = {},
   ): Promise<WorkDetail | null> =>
-    request(s.workDetailSchema, `/work-capabilities/${segment(capId)}/work`, {}, {
+    request(s.workDetailSchema, `/protocol/work-capabilities/${segment(capId)}/work`, {}, {
       ...opts,
       nullOn404: true,
     });
@@ -395,7 +394,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<WorkDetail[]> =>
     required(
       s.workDetailsSchema,
-      `/wallets/${segment(address)}/work-details`,
+      `/protocol/wallets/${segment(address)}/work-details`,
       {},
       opts,
     );
@@ -407,7 +406,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<Balance> =>
     required(
       s.balanceSchema,
-      `/wallets/${segment(address)}/balance`,
+      `/platform/wallets/${segment(address)}/balance`,
       { coinType },
       opts,
     );
@@ -419,7 +418,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<Ownership> =>
     required(
       s.ownershipSchema,
-      `/wallets/${segment(address)}/ownership`,
+      `/platform/wallets/${segment(address)}/ownership`,
       { party: partyId },
       opts,
     );
@@ -431,7 +430,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<Ownership> =>
     required(
       s.ownershipSchema,
-      `/wallets/${segment(address)}/ownership`,
+      `/platform/wallets/${segment(address)}/ownership`,
       {
         party: target.partyId,
         record: target.recordId,
@@ -446,7 +445,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<Ownership> =>
     required(
       s.ownershipSchema,
-      `/wallets/${segment(address)}/ownership`,
+      `/platform/wallets/${segment(address)}/ownership`,
       { record: recordId },
       opts,
     );
@@ -458,19 +457,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   ): Promise<PurchaseReceipt | null> =>
     request(
       s.purchaseReceiptSchema,
-      `/transactions/${segment(txDigest)}/receipts/${segment(recordId)}`,
-      {},
-      { ...opts, nullOn404: true },
-    );
-
-  const getReceipt = (
-    pressingId: string,
-    txDigest: string,
-    opts: MisoRequestOptions = {},
-  ): Promise<PurchaseReceipt | null> =>
-    request(
-      s.purchaseReceiptSchema,
-      `/receipts/${segment(pressingId)}/${segment(txDigest)}`,
+      `/platform/transactions/${segment(txDigest)}/receipts/${segment(recordId)}`,
       {},
       { ...opts, nullOn404: true },
     );
@@ -515,14 +502,7 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     ownsParty: getWalletPartyOwnership,
     /** @deprecated Use {@link getWalletRecordOwnership}. */
     ownsRecord: getWalletRecordOwnership,
-    /**
-     * @deprecated Compatibility route keyed by pressingId and txDigest. It
-     * intentionally remains on the legacy `/receipts/:pressingId/:txDigest`
-     * path during the v1 migration and throws HTTP 409 when a transaction
-     * bought two Records from one Pressing. Use {@link getPurchaseReceipt}
-     * with the exact recordId.
-     */
-    getReceipt,
+
   };
 }
 

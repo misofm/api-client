@@ -114,7 +114,7 @@ export function queryPolicy(cls: CacheClass): { staleTime: number } {
 
 /**
  * A work's class from its own state. This is why the middleware picks TTL from
- * the RESPONSE rather than the route: the same `/releases/:id` path is a
+ * the RESPONSE rather than the route: the same `/protocol/releases/:id` path is a
  * year-stable published record for one id and a live draft for another.
  */
 export function workCacheClass(state: { type: string } | null | undefined): CacheClass {

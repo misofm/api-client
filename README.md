@@ -32,15 +32,10 @@ if (pressing) {
 Reads for resources that may legitimately be absent return `null` on 404.
 Collection and required wallet reads return their body or throw.
 
-Version 0.17 uses the public `/v1` resource namespace by default. The canonical
-ownership, work, and purchase-receipt methods request `/wallets/:address/ownership`,
-`/work-capabilities/:capId/work`, and
-`/transactions/:digest/receipts/:recordId`. Configure `prefix` when the API is
-mounted under a different path (for example, a direct service or the old
-`/read/v1` gateway mount); it does not restore the old resource names. The
-deprecated `getReceipt(pressingId,
-txDigest)` helper remains on its explicit legacy `/receipts/:pressingId/:txDigest`
-route.
+Version 0.18 uses `/v1/protocol` for releases, administered works, and royalty
+claims, and `/v1/platform` for pressings, records, artists, ownership, and receipts.
+This is a breaking route change. The removed pressing-based `getReceipt` helper
+has no replacement alias; use `getPurchaseReceipt(txDigest, recordId)`.
 
 ## Methods
 
@@ -56,11 +51,7 @@ Singular resources use `get…`; collections use `list…`:
 Older names (`getListing`, `getArtists`, `getWalletRecords`,
 `getWalletParties`, `getPendingMemberships`, `getWalletWorks`, `getBalance`,
 `ownsParty`, and `ownsRecord`) remain backward-compatible aliases and are marked
-deprecated for editor-assisted migration. `getReceipt(pressingId, txDigest)` is
-the deprecated compatibility receipt lookup; use
-`getPurchaseReceipt(txDigest, recordId)` to select one exact Record. The legacy
-method throws HTTP 409 when one transaction bought multiple Records from the
-same Pressing.
+deprecated for editor-assisted migration. These aliases use the current routes.
 
 `getWalletWorkDetails` is the deprecated compatibility alias for
 `listWalletWorkDetails`. Both make one private request to return all three work
