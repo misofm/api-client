@@ -16,6 +16,9 @@ export type CompositionView = z.infer<typeof s.compositionViewSchema>;
 export type RecordingMaster = z.infer<typeof s.recordingMasterSchema>;
 export type TrackView = z.infer<typeof s.trackViewSchema>;
 
+export type CompositionMetadata = z.infer<typeof s.compositionMetadataSchema>;
+export type RecordingMetadata = z.infer<typeof s.recordingMetadataSchema>;
+
 export type ReleaseDetail = z.infer<typeof s.releaseDetailSchema>;
 export type TrackCredits = z.infer<typeof s.trackCreditsSchema>;
 export type Price = z.infer<typeof s.priceSchema>;

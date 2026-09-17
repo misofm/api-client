@@ -9,6 +9,8 @@ import * as s from "./schemas.js";
 import { queryPolicy, type CacheClass } from "./cache.js";
 import type {
   ArtistProfile,
+  CompositionMetadata,
+  RecordingMetadata,
   Balance,
   ListingView,
   OwnedParty,
@@ -279,6 +281,20 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
       { ...opts, nullOn404: true, mutable: true },
     );
 
+  const getComposition = (
+    compositionId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<CompositionMetadata | null> =>
+    request(s.compositionMetadataSchema, `/compositions/${segment(compositionId)}`, {},
+      { ...opts, nullOn404: true });
+
+  const getRecording = (
+    recordingId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<RecordingMetadata | null> =>
+    request(s.recordingMetadataSchema, `/recordings/${segment(recordingId)}`, {},
+      { ...opts, nullOn404: true });
+
   const getRelease = (
     releaseId: string,
     opts: MisoRequestOptions & { include?: readonly "trackCredits"[] } = {},
@@ -478,6 +494,8 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   return {
     getPressing,
     getPressingListing,
+    getComposition,
+    getRecording,
     getRelease,
     getRecordAlbum,
     getArtist,
