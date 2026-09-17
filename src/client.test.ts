@@ -38,6 +38,37 @@ function stubFetch(response: {
 
 const BASE = "https://api.testnet.miso.fm";
 
+describe("modular protocol reads", () => {
+  const composition = { id: "0x1", title: "Song", state: { type: "Published" as const, timestampMs: 123 }, royaltyRate: { value: 1000 } };
+  const recording = { id: "0x2", compositionId: "0x1", state: composition.state };
+  const lyrics = { compositionId: "0x1", lyrics: [{ language: "en", text: "Verse\nChorus 🎵" }] };
+
+  test.each([
+    ["getComposition", "compositions/0x1", composition],
+    ["getCompositionLyrics", "compositions/0x1/lyrics", lyrics],
+    ["getRecording", "recordings/0x1", recording],
+  ] as const)("%s validates its response and preserves cancellation and cache versions", async (method, path, body) => {
+    const stub = stubFetch({ body });
+    const signal = new AbortController().signal;
+    const api = createMisoApiClient({ baseUrl: BASE, fetch: stub.fetch, version: () => "1789640000" });
+    expect(await api[method]("0x1", { signal })).toEqual(body);
+    expect(stub.calls[0]).toBe(`${BASE}/v1/protocol/${path}?v=1789640000`);
+    expect(stub.initCalls[0]!.signal).toBe(signal);
+  });
+
+  test("missing compositions differ from compositions without lyrics", async () => {
+    const missing = createMisoApiClient({ baseUrl: BASE, fetch: stubFetch({ status: 404 }).fetch });
+    expect(await missing.getCompositionLyrics("0x1")).toBeNull();
+    const empty = { compositionId: "0x1", lyrics: [] };
+    expect(await createMisoApiClient({ baseUrl: BASE, fetch: stubFetch({ body: empty }).fetch }).getCompositionLyrics("0x1")).toEqual(empty);
+  });
+
+  test("rejects malformed lyrics responses", async () => {
+    const api = createMisoApiClient({ baseUrl: BASE, fetch: stubFetch({ body: { ...lyrics, lyrics: [{ language: "en", text: 42 }] } }).fetch });
+    await expect(api.getCompositionLyrics("0x1")).rejects.toBeInstanceOf(MisoApiContractError);
+  });
+});
+
 const balance = {
   address: "0xabc",
   coinType: "0x7777::fakeusd::FakeUsd",

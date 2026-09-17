@@ -23,6 +23,9 @@ import type {
   ReleaseDetail,
   RoyaltyClaimsPage,
   WorkDetail,
+  CompositionView,
+  CompositionLyrics,
+  RecordingView,
 } from "./types.js";
 
 export interface MisoRequestOptions {
@@ -278,6 +281,21 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
       { ...opts, nullOn404: true, mutable: true },
     );
 
+  const getComposition = (compositionId: string, opts: MisoRequestOptions = {}): Promise<CompositionView | null> =>
+    request(s.compositionViewSchema, `/protocol/compositions/${segment(compositionId)}`, {}, {
+      ...opts, nullOn404: true, mutable: true,
+    });
+
+  const getCompositionLyrics = (compositionId: string, opts: MisoRequestOptions = {}): Promise<CompositionLyrics | null> =>
+    request(s.compositionLyricsSchema, `/protocol/compositions/${segment(compositionId)}/lyrics`, {}, {
+      ...opts, nullOn404: true, mutable: true,
+    });
+
+  const getRecording = (recordingId: string, opts: MisoRequestOptions = {}): Promise<RecordingView | null> =>
+    request(s.recordingViewSchema, `/protocol/recordings/${segment(recordingId)}`, {}, {
+      ...opts, nullOn404: true, mutable: true,
+    });
+
   const getRelease = (
     releaseId: string,
     opts: MisoRequestOptions & { include?: readonly "trackCredits"[] } = {},
@@ -463,6 +481,9 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     );
 
   return {
+    getComposition,
+    getCompositionLyrics,
+    getRecording,
     getPressing,
     getPressingListing,
     getRelease,

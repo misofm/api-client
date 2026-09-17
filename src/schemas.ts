@@ -110,6 +110,12 @@ export const compositionViewSchema = z.object({
   royaltyRate: z.object({ value: z.number().int().min(0).max(10_000) }),
 });
 
+/** Lyrics are fetched separately and arrive as decoded UTF-8 text. */
+export const compositionLyricsSchema = z.object({
+  compositionId: suiIdSchema,
+  lyrics: z.array(z.object({ language: z.string().min(1), text: z.string() })),
+});
+
 export const trackViewSchema = z.object({
   /** Display number — "1", or "1.2" (disc.track) on a multi-disc set. */
   no: z.string(),

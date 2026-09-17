@@ -6,6 +6,13 @@ values stay decimal strings so JavaScript never silently loses precision.
 
 ## Install
 
+Modular protocol reads are available through `getComposition(id)`,
+`getRecording(id)`, and `getCompositionLyrics(id)`. Lyrics are fetched only by
+the latter and return `{ compositionId, lyrics: [{ language, text }] }` with
+decoded UTF-8 text. Missing objects return `null`; an existing composition
+without lyrics returns an empty list. All three methods support cancellation
+and the client's mutable-resource cache version.
+
 ```sh
 npm install @misofm/api-client
 ```
