@@ -116,6 +116,105 @@ export const compositionLyricsSchema = z.object({
   lyrics: z.array(z.object({ language: z.string().min(1), text: z.string() })),
 });
 
+// ── Modular resources ───────────────────────────────────────────────────────
+//
+// Canonical modular endpoints keep the parent identity in every extension
+// response. Core and lyrics resources reuse the already-published contracts so
+// legacy protocol reads and modular reads cannot drift apart.
+
+/** Canonical composition core response. */
+export const compositionCoreSchema = compositionViewSchema;
+
+/** Composition writing credits, without hydrating party profiles. */
+export const compositionCreditsSchema = z.object({
+  compositionId: suiIdSchema,
+  credits: z.array(creditSchema),
+});
+
+/** Decoded lyrics attached to a composition, grouped by language. */
+export const compositionLyricsResourceSchema = compositionLyricsSchema;
+
+/** Canonical recording core response. */
+export const recordingCoreSchema = recordingViewSchema;
+
+/** Recording credits, including the parent recording identity. */
+export const recordingCreditsResourceSchema = z.object({
+  recordingId: suiIdSchema,
+  credits: z.array(creditSchema),
+  primaryArtistIds: z.array(suiIdSchema),
+  featuredArtistIds: z.array(suiIdSchema),
+});
+
+/** Optional archival master attachment for a recording. */
+export const recordingMasterResourceSchema = z.object({
+  recordingId: suiIdSchema,
+  masterBlobId: walrusBlobIdSchema.nullable(),
+});
+
+/** Optional streaming transcode attachment for a recording. */
+export const recordingStreamSchema = z.object({
+  recordingId: suiIdSchema,
+  transcodeQuiltId: walrusBlobIdSchema.nullable(),
+});
+
+/** Optional Miso Engine session attachment for a recording. */
+export const recordingEngineSessionSchema = z.object({
+  recordingId: suiIdSchema,
+  engineSession: trackEngineSessionSchema.nullable(),
+});
+
+/** Canonical release core response. */
+export const releaseCoreSchema = z.object({
+  id: suiIdSchema,
+  state: workStateSchema,
+  title: z.string(),
+  trackCount: z.number().int().nonnegative(),
+});
+
+const releaseTrackResourceSchema = z.object({
+  position: z.number().int().positive(),
+  state: z.enum(["Assigned", "Unassigned"]),
+  compositionId: suiIdSchema,
+  recordingId: suiIdSchema,
+  splitBps: z.number().int().min(0).max(10_000),
+});
+
+/** Ordered release tracks, retaining repeated recording references. */
+export const releaseTracksSchema = z.object({
+  releaseId: suiIdSchema,
+  tracks: z.array(releaseTrackResourceSchema),
+});
+
+/** Release credits, without hydrating party profiles. */
+export const releaseCreditsSchema = z.object({
+  releaseId: suiIdSchema,
+  credits: z.array(creditSchema),
+});
+
+/** Optional cover attachment for a release. */
+export const releaseCoverSchema = z.object({
+  releaseId: suiIdSchema,
+  cover: coverSchema.nullable(),
+});
+
+/** Optional self-declared release kind. */
+export const releaseKindSchema = z.object({
+  releaseId: suiIdSchema,
+  kind: z.string().nullable(),
+});
+
+/** Optional release description. */
+export const releaseDescriptionSchema = z.object({
+  releaseId: suiIdSchema,
+  description: z.string().nullable(),
+});
+
+/** Release genres in chain order, retaining unresolved genre identities. */
+export const releaseGenresSchema = z.object({
+  releaseId: suiIdSchema,
+  genres: z.array(z.object({ id: suiIdSchema, name: z.string().nullable() })),
+});
+
 export const trackViewSchema = z.object({
   /** Display number — "1", or "1.2" (disc.track) on a multi-disc set. */
   no: z.string(),

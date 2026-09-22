@@ -10,6 +10,9 @@ import { queryPolicy, type CacheClass } from "./cache.js";
 import type {
   ArtistProfile,
   Balance,
+  CompositionCore,
+  CompositionCredits,
+  CompositionLyricsResource,
   ListingView,
   OwnedParty,
   OwnedRecord,
@@ -20,7 +23,19 @@ import type {
   PressingView,
   PurchaseReceipt,
   RecordAlbum,
+  RecordingCore,
+  RecordingCreditsResource,
+  RecordingEngineSession,
+  RecordingMasterResource,
+  RecordingStream,
+  ReleaseCore,
+  ReleaseCover,
+  ReleaseCredits,
+  ReleaseDescription,
   ReleaseDetail,
+  ReleaseGenres,
+  ReleaseKind,
+  ReleaseTracks,
   RoyaltyClaimsPage,
   RoyaltyStakesPage,
   WorkDetail,
@@ -128,6 +143,8 @@ export interface MisoApiClientOptions {
    * uses `/v1`, followed by the protocol or platform resource namespace.
    */
   prefix?: string;
+  /** Path the canonical modular resource endpoints are mounted under. */
+  modularPrefix?: string;
 }
 
 export type WalletOwnershipTarget =
@@ -140,6 +157,8 @@ interface RequestConfig extends MisoRequestOptions {
   nullOn404?: boolean;
   /** Whether this public resource can change after it has first been read. */
   mutable?: boolean;
+  /** Modular versioned reads bypass browser caches while propagating writes. */
+  modular?: boolean;
 }
 
 /** Encode exactly one dynamic route segment, including `/`, `%`, `?`, and `#`. */
@@ -181,19 +200,20 @@ function requestHeaders(input?: HeadersInit): HeadersInit {
 export function createMisoApiClient(options: MisoApiClientOptions) {
   const base = options.baseUrl.replace(/\/$/, "");
   const prefix = (options.prefix ?? "/v1").replace(/\/$/, "");
+  const modularPrefix = (options.modularPrefix ?? "/v1").replace(/\/$/, "");
   const doFetch = options.fetch ?? globalThis.fetch.bind(globalThis);
 
   function url(
     path: string,
     query: Record<string, QueryValue> = {},
-    mutable = false,
+    version?: string,
+    root = prefix,
   ): string {
-    const u = new URL(`${base}${prefix}${path}`);
+    const u = new URL(`${base}${root}${path}`);
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== null && value !== "")
         u.searchParams.set(key, String(value));
     }
-    const version = mutable ? options.version?.() : undefined;
     if (version) u.searchParams.set("v", version);
     return u.toString();
   }
@@ -204,11 +224,19 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     query: Record<string, QueryValue> = {},
     opts: RequestConfig = {},
   ): Promise<T | null> {
-    const target = url(path, query, opts.mutable);
-    const response = await doFetch(target, {
+    const version = opts.mutable ? options.version?.() : undefined;
+    const init: RequestInit = {
       headers: requestHeaders(opts.headers),
       signal: opts.signal,
-    });
+    };
+    if (opts.modular && version) init.cache = "no-store";
+    const target = url(
+      path,
+      query,
+      version,
+      opts.modular ? modularPrefix : prefix,
+    );
+    const response = await doFetch(target, init);
 
     if (response.status === 404 && opts.nullOn404) return null;
 
@@ -306,6 +334,171 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
       `/protocol/releases/${segment(releaseId)}`,
       { include: opts.include?.join(",") },
       { ...opts, nullOn404: true, mutable: true },
+    );
+
+  const getCompositionCore = (
+    compositionId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<CompositionCore | null> =>
+    request(
+      s.compositionCoreSchema,
+      `/compositions/${segment(compositionId)}`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getCompositionCredits = (
+    compositionId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<CompositionCredits | null> =>
+    request(
+      s.compositionCreditsSchema,
+      `/compositions/${segment(compositionId)}/credits`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getCompositionLyricsResource = (
+    compositionId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<CompositionLyricsResource | null> =>
+    request(
+      s.compositionLyricsResourceSchema,
+      `/compositions/${segment(compositionId)}/lyrics`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getRecordingCore = (
+    recordingId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<RecordingCore | null> =>
+    request(
+      s.recordingCoreSchema,
+      `/recordings/${segment(recordingId)}`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getRecordingCredits = (
+    recordingId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<RecordingCreditsResource | null> =>
+    request(
+      s.recordingCreditsResourceSchema,
+      `/recordings/${segment(recordingId)}/credits`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getRecordingMaster = (
+    recordingId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<RecordingMasterResource | null> =>
+    request(
+      s.recordingMasterResourceSchema,
+      `/recordings/${segment(recordingId)}/master`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getRecordingStream = (
+    recordingId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<RecordingStream | null> =>
+    request(
+      s.recordingStreamSchema,
+      `/recordings/${segment(recordingId)}/stream`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getRecordingEngineSession = (
+    recordingId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<RecordingEngineSession | null> =>
+    request(
+      s.recordingEngineSessionSchema,
+      `/recordings/${segment(recordingId)}/engine-session`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getReleaseCore = (
+    releaseId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<ReleaseCore | null> =>
+    request(
+      s.releaseCoreSchema,
+      `/releases/${segment(releaseId)}`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getReleaseTracks = (
+    releaseId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<ReleaseTracks | null> =>
+    request(
+      s.releaseTracksSchema,
+      `/releases/${segment(releaseId)}/tracks`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getReleaseCredits = (
+    releaseId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<ReleaseCredits | null> =>
+    request(
+      s.releaseCreditsSchema,
+      `/releases/${segment(releaseId)}/credits`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getReleaseCover = (
+    releaseId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<ReleaseCover | null> =>
+    request(
+      s.releaseCoverSchema,
+      `/releases/${segment(releaseId)}/cover`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getReleaseKind = (
+    releaseId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<ReleaseKind | null> =>
+    request(
+      s.releaseKindSchema,
+      `/releases/${segment(releaseId)}/kind`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getReleaseDescription = (
+    releaseId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<ReleaseDescription | null> =>
+    request(
+      s.releaseDescriptionSchema,
+      `/releases/${segment(releaseId)}/description`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
+    );
+
+  const getReleaseGenres = (
+    releaseId: string,
+    opts: MisoRequestOptions = {},
+  ): Promise<ReleaseGenres | null> =>
+    request(
+      s.releaseGenresSchema,
+      `/releases/${segment(releaseId)}/genres`,
+      {},
+      { ...opts, nullOn404: true, mutable: true, modular: true },
     );
 
   const getRecordAlbum = (
@@ -493,6 +686,21 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     getComposition,
     getCompositionLyrics,
     getRecording,
+    getCompositionCore,
+    getCompositionCredits,
+    getCompositionLyricsResource,
+    getRecordingCore,
+    getRecordingCredits,
+    getRecordingMaster,
+    getRecordingStream,
+    getRecordingEngineSession,
+    getReleaseCore,
+    getReleaseTracks,
+    getReleaseCredits,
+    getReleaseCover,
+    getReleaseKind,
+    getReleaseDescription,
+    getReleaseGenres,
     getPressing,
     getPressingListing,
     getRelease,

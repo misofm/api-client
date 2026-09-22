@@ -6,12 +6,14 @@ values stay decimal strings so JavaScript never silently loses precision.
 
 ## Install
 
-Modular protocol reads are available through `getComposition(id)`,
-`getRecording(id)`, and `getCompositionLyrics(id)`. Lyrics are fetched only by
-the latter and return `{ compositionId, lyrics: [{ language, text }] }` with
-decoded UTF-8 text. Missing objects return `null`; an existing composition
-without lyrics returns an empty list. All three methods support cancellation
-and the client's mutable-resource cache version.
+Modular protocol reads are available through `getCompositionCore`,
+`getRecordingCore`, `getReleaseCore`, and their credits, lyrics, tracks, cover,
+metadata, and audio attachment methods. The existing `getComposition(id)`,
+`getRecording(id)`, and `getCompositionLyrics(id)` methods remain available on
+their published protocol routes. Lyrics return decoded UTF-8 text. Missing
+objects return `null`; an existing composition without lyrics returns an empty
+list. Modular methods support cancellation and the client's mutable-resource
+cache version.
 
 ```sh
 npm install @misofm/api-client
@@ -28,6 +30,7 @@ import { createMisoApiClient } from "@misofm/api-client";
 
 const api = createMisoApiClient({
   baseUrl: "https://api.testnet.miso.fm",
+  modularPrefix: "/v1",
 });
 
 const pressing = await api.getPressing(pressingId);
@@ -51,6 +54,7 @@ Singular resources use `get…`; collections use `list…`:
 | Area | Canonical methods |
 | --- | --- |
 | Catalog | `getPressing`, `getPressingListing`, `getRelease`, `getRecordAlbum` |
+| Modular resources | `getCompositionCore`, `getCompositionCredits`, `getCompositionLyricsResource`, `getRecordingCore`, `getRecordingCredits`, `getRecordingMaster`, `getRecordingStream`, `getRecordingEngineSession`, `getReleaseCore`, `getReleaseTracks`, `getReleaseCredits`, `getReleaseCover`, `getReleaseKind`, `getReleaseDescription`, `getReleaseGenres` |
 | Artists | `getArtist`, `listArtists` |
 | Wallet | `listWalletRecords`, `listWalletParties`, `listWalletPendingMemberships`, `listWalletWorks`, `listWalletWorkDetails`, `getWalletBalance`, `getWalletOwnership`, `getWalletPartyOwnership`, `getWalletRecordOwnership` |
 | Works and receipts | `getWork`, `getPurchaseReceipt` |

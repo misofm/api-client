@@ -17,6 +17,31 @@ export type CompositionLyrics = z.infer<typeof s.compositionLyricsSchema>;
 export type RecordingMaster = z.infer<typeof s.recordingMasterSchema>;
 export type TrackView = z.infer<typeof s.trackViewSchema>;
 
+export type CompositionCore = z.infer<typeof s.compositionCoreSchema>;
+export type CompositionCredits = z.infer<typeof s.compositionCreditsSchema>;
+export type CompositionLyricsResource = z.infer<
+  typeof s.compositionLyricsResourceSchema
+>;
+export type RecordingCore = z.infer<typeof s.recordingCoreSchema>;
+export type RecordingCreditsResource = z.infer<
+  typeof s.recordingCreditsResourceSchema
+>;
+export type RecordingCredits = RecordingCreditsResource;
+export type RecordingMasterResource = z.infer<
+  typeof s.recordingMasterResourceSchema
+>;
+export type RecordingStream = z.infer<typeof s.recordingStreamSchema>;
+export type RecordingEngineSession = z.infer<
+  typeof s.recordingEngineSessionSchema
+>;
+export type ReleaseCore = z.infer<typeof s.releaseCoreSchema>;
+export type ReleaseTracks = z.infer<typeof s.releaseTracksSchema>;
+export type ReleaseCredits = z.infer<typeof s.releaseCreditsSchema>;
+export type ReleaseCover = z.infer<typeof s.releaseCoverSchema>;
+export type ReleaseKind = z.infer<typeof s.releaseKindSchema>;
+export type ReleaseDescription = z.infer<typeof s.releaseDescriptionSchema>;
+export type ReleaseGenres = z.infer<typeof s.releaseGenresSchema>;
+
 export type ReleaseDetail = z.infer<typeof s.releaseDetailSchema>;
 export type TrackCredits = z.infer<typeof s.trackCreditsSchema>;
 export type Price = z.infer<typeof s.priceSchema>;
