@@ -679,3 +679,27 @@ export const partyLinksSchema = z.object({ partyId: suiIdSchema, links: z.array(
 export const partyCtasSchema = z.object({ partyId: suiIdSchema, ctas: z.array(partyCtaSchema) }).strict();
 export const partyRolesSchema = z.object({ partyId: suiIdSchema, roles: z.array(artistRoleSchema) }).strict();
 export const partyTagsSchema = z.object({ partyId: suiIdSchema, tags: z.array(z.string()) }).strict();
+
+// Remaining modular reads: references and independent facts, never expanded albums.
+export const pressingListingResourceSchema = z.object({
+  id: suiIdSchema, pressingId: suiIdSchema, releaseId: suiIdSchema, pricing: priceSchema,
+  currencyType: z.string().min(1), state: z.enum(["enabled", "disabled"]),
+  totalProceeds: u64Schema.refine(value => !/^\d+$/.test(value) || BigInt(value) <= (1n << 128n) - 1n, { message: "Proceeds must fit an unsigned 128-bit integer" }),
+}).strict();
+export const recordCoreSchema = z.object({ id: suiIdSchema, releaseId: suiIdSchema, pressingId: suiIdSchema, edition: u16Schema.min(1), number: u32Schema.min(1) }).strict();
+export const recordPurchaseSchema = z.object({ recordId: suiIdSchema, purchaseCurrency: z.string().min(1), purchasePrice: u64Schema, purchasedBy: suiIdSchema, purchasedTimestampMs: u64Schema }).strict();
+export const partyPendingMembershipsSchema = z.object({ partyId: suiIdSchema, groupIds: z.array(suiIdSchema) }).strict();
+export const walletRecordReferencesSchema = z.object({ records: z.array(z.object({ recordId: suiIdSchema, releaseId: suiIdSchema, pressingId: suiIdSchema }).strict()), nextCursor: z.string().nullable() }).strict();
+export const walletPartyCapabilitiesSchema = z.object({ capabilities: z.array(z.object({ capId: suiIdSchema, partyId: suiIdSchema }).strict()), nextCursor: z.string().nullable() }).strict();
+export const workCapabilitySchema = z.object({ capId: suiIdSchema, kind: workKindSchema, custody: z.enum(["direct", "vaulted"]), shareType: z.string().nullable(), workId: suiIdSchema.nullable(), vaultId: suiIdSchema.nullable() }).strict();
+export const walletWorkCapabilitiesSchema = z.object({ capabilities: z.array(workCapabilitySchema), nextCursor: z.string().nullable() }).strict();
+export const workCapabilityReferenceSchema = z.object({ capId: suiIdSchema, kind: workKindSchema, workId: suiIdSchema.nullable(), shareType: z.string().nullable() }).strict();
+export const shareWorkReferenceSchema = z.object({ kind: z.enum(["composition", "recording"]), workId: suiIdSchema, shareType: z.string().min(1) }).strict();
+export const walletBalanceResourceSchema = z.object({ address: suiIdSchema, coinType: z.string().min(1), balance: z.string().regex(/^\d+$/), coinBalance: z.string().regex(/^\d+$/), addressBalance: z.string().regex(/^\d+$/) }).strict().refine(v =>
+  ![v.balance, v.coinBalance, v.addressBalance].every(part => /^\d+$/.test(part)) || BigInt(v.balance) === BigInt(v.coinBalance) + BigInt(v.addressBalance),
+{ message: "Balance components must sum to total" });
+export const coinMetadataResourceSchema = z.object({ coinType: z.string().min(1), decimals: z.number().int().min(0).max(255), name: z.string(), symbol: z.string(), description: z.string(), iconUrl: z.string().nullable() }).strict();
+export const stakeCoreSchema = royaltyStakeSchema.pick({ id: true, shareType: true, balance: true }).strict();
+export const stakeRegistrationsSchema = z.object({ stakeId: suiIdSchema, registrations: royaltyStakeSchema.shape.registrations }).strict();
+export const walletStakeResourcesSchema = z.object({ stakes: z.array(stakeCoreSchema), nextCursor: z.string().nullable() }).strict();
+export const transactionSaleResourceSchema = z.object({ transactionDigest: z.string().min(1), sale: recordSaleSchema }).strict();

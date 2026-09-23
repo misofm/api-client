@@ -62,11 +62,14 @@ try {
       import * as types from "${packageName}/types";
       import * as cache from "${packageName}/cache";
       if (typeof root.createMisoApiClient !== "function") throw new Error("root export failed");
-      if (!schemas.balanceSchema || !schemas.releaseCoreSchema || !schemas.recordingMasterResourceSchema) throw new Error("schemas export failed");
+      if (!schemas.balanceSchema || !schemas.releaseCoreSchema || !schemas.recordingMasterResourceSchema || !schemas.pressingListingResourceSchema || !schemas.walletRecordReferencesSchema) throw new Error("schemas export failed");
       if (typeof types !== "object") throw new Error("types export failed");
       if (typeof cache.cacheControl !== "function" || typeof cache.modularCachePolicy !== "function") throw new Error("cache export failed");
       const client = root.createMisoApiClient({ baseUrl: "https://api.test" });
       for (const method of ["getCompositionCore", "getCompositionCredits", "getCompositionLyricsResource", "getRecordingCore", "getRecordingCredits", "getRecordingMaster", "getRecordingStream", "getRecordingEngineSession", "getReleaseCore", "getReleaseTracks", "getReleaseCredits", "getReleaseCover", "getReleaseKind", "getReleaseDescription", "getReleaseGenres"]) {
+        if (typeof client[method] !== "function") throw new Error(method + " packed export failed");
+      }
+      for (const method of ["getPressingCore", "getPressingListingResource", "getRecordCore", "getRecordPurchase", "getPartyPendingMemberships", "listWalletRecordReferences", "listWalletPartyCapabilities", "listWalletWorkCapabilities", "getWorkCapability", "getWorkCapabilityReference", "getWalletBalanceResource", "getCoinMetadata", "getStakeCore", "getStakeRegistrations", "listWalletStakeResources", "getShareWorkReference", "listWalletRoyaltyClaimsResource", "getPartyOwnershipResource", "getRecordOwnershipResource", "getTransactionSale"]) {
         if (typeof client[method] !== "function") throw new Error(method + " packed export failed");
       }
     `,
@@ -79,10 +82,10 @@ try {
   await writeFile(
     join(temp, "consumer.ts"),
     `
-      import { createMisoApiClient, type MisoApiClient } from "${packageName}";
+      import { createMisoApiClient, type MisoApiClient, type ResourcePageOptions } from "${packageName}";
       import { balanceSchema } from "${packageName}/schemas";
       import { cacheControl } from "${packageName}/cache";
-      import type { Balance, ReleaseCore, RecordingMasterResource } from "${packageName}/types";
+      import type { Balance, ReleaseCore, RecordingMasterResource, PressingListingResource, WalletRecordReferences, WorkCapabilityReference } from "${packageName}/types";
       const client: MisoApiClient = createMisoApiClient({ baseUrl: "https://api.test" });
       const result: Promise<Balance> = client.getWalletBalance("0x1");
       void result;
@@ -90,6 +93,11 @@ try {
       const master: Promise<RecordingMasterResource | null> = client.getRecordingMaster("0x2");
       void release;
       void master;
+      const page: ResourcePageOptions = { limit: 10 };
+      const records: Promise<WalletRecordReferences> = client.listWalletRecordReferences("0x1", page);
+      const listing: Promise<PressingListingResource | null> = client.getPressingListingResource("0x1", "0x2::sui::SUI");
+      const capability: Promise<WorkCapabilityReference | null> = client.getWorkCapabilityReference("0x1");
+      void records; void listing; void capability;
       balanceSchema.parse({ address: "0x1", coinType: "coin", balance: "0", decimals: 0 });
       cacheControl("private");
     `,

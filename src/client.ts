@@ -713,7 +713,33 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
       { ...opts, nullOn404: true },
     );
 
+  function resource<T>(schema: z.ZodType<T>, path: string, opts: MisoRequestOptions, query: Record<string, QueryValue> = {}) {
+    return request(schema, path, query, { ...opts, mutable: true, modular: true, nullOn404: true });
+  }
+  function pageResource<T>(schema: z.ZodType<T>, path: string, query: Record<string, QueryValue>, opts: MisoRequestOptions) {
+    return required(schema, path, query, { ...opts, mutable: true, modular: true });
+  }
   return {
+    getPressingCore: (id: string, opts: MisoRequestOptions = {}) => resource(s.pressingViewSchema, `/pressings/${segment(id)}`, opts),
+    getPressingListingResource: (id: string, currencyType: string, opts: MisoRequestOptions = {}) => resource(s.pressingListingResourceSchema, `/pressings/${segment(id)}/listing`, opts, { currencyType }),
+    getRecordCore: (id: string, opts: MisoRequestOptions = {}) => resource(s.recordCoreSchema, `/records/${segment(id)}`, opts),
+    getRecordPurchase: (id: string, opts: MisoRequestOptions = {}) => resource(s.recordPurchaseSchema, `/records/${segment(id)}/purchase`, opts),
+    getPartyPendingMemberships: (id: string, opts: MisoRequestOptions = {}) => resource(s.partyPendingMembershipsSchema, `/parties/${segment(id)}/pending-memberships`, opts),
+    listWalletRecordReferences: (address: string, page: ResourcePageOptions = {}, opts: MisoRequestOptions = {}) => pageResource(s.walletRecordReferencesSchema, `/wallets/${segment(address)}/records`, { ...page }, opts),
+    listWalletPartyCapabilities: (address: string, page: ResourcePageOptions = {}, opts: MisoRequestOptions = {}) => pageResource(s.walletPartyCapabilitiesSchema, `/wallets/${segment(address)}/party-capabilities`, { ...page }, opts),
+    listWalletWorkCapabilities: (address: string, page: ResourcePageOptions & { kind: "composition" | "recording" | "release"; custody: "direct" | "vaulted" }, opts: MisoRequestOptions = {}) => pageResource(s.walletWorkCapabilitiesSchema, `/wallets/${segment(address)}/work-capabilities`, { ...page }, opts),
+    getWorkCapability: (id: string, opts: MisoRequestOptions = {}) => resource(s.workCapabilitySchema, `/work-capabilities/${segment(id)}`, opts),
+    getWorkCapabilityReference: (id: string, opts: MisoRequestOptions = {}) => resource(s.workCapabilityReferenceSchema, `/work-capabilities/${segment(id)}/work`, opts),
+    getWalletBalanceResource: (address: string, coinType?: string, opts: MisoRequestOptions = {}) => pageResource(s.walletBalanceResourceSchema, `/wallets/${segment(address)}/balance`, { coinType }, opts),
+    getCoinMetadata: (coinType: string, opts: MisoRequestOptions = {}) => resource(s.coinMetadataResourceSchema, `/coins/${segment(coinType)}/metadata`, opts),
+    getStakeCore: (id: string, opts: MisoRequestOptions = {}) => resource(s.stakeCoreSchema, `/stakes/${segment(id)}`, opts),
+    getStakeRegistrations: (id: string, opts: MisoRequestOptions = {}) => resource(s.stakeRegistrationsSchema, `/stakes/${segment(id)}/registrations`, opts),
+    listWalletStakeResources: (address: string, page: ResourcePageOptions = {}, opts: MisoRequestOptions = {}) => pageResource(s.walletStakeResourcesSchema, `/wallets/${segment(address)}/stakes`, { ...page }, opts),
+    getShareWorkReference: (shareType: string, kind: "composition" | "recording", opts: MisoRequestOptions = {}) => resource(s.shareWorkReferenceSchema, `/shares/${segment(shareType)}/work`, opts, { kind }),
+    listWalletRoyaltyClaimsResource: (address: string, page: { before?: string | null; limit?: number } = {}, opts: MisoRequestOptions = {}) => pageResource(s.royaltyClaimsPageSchema, `/wallets/${segment(address)}/royalty-claims`, { ...page }, opts),
+    getPartyOwnershipResource: (address: string, id: string, opts: MisoRequestOptions = {}) => pageResource(s.ownershipSchema, `/wallets/${segment(address)}/parties/${segment(id)}/ownership`, {}, opts),
+    getRecordOwnershipResource: (address: string, id: string, opts: MisoRequestOptions = {}) => pageResource(s.ownershipSchema, `/wallets/${segment(address)}/records/${segment(id)}/ownership`, {}, opts),
+    getTransactionSale: (digest: string, recordId: string, opts: MisoRequestOptions = {}) => resource(s.transactionSaleResourceSchema, `/transactions/${segment(digest)}/sales/${segment(recordId)}`, opts),
     listParties,
     getPartyCore,
     getPartyProfile,
@@ -848,3 +874,5 @@ export const READ_CACHE_CLASS = {
 } as const satisfies Record<string, CacheClass>;
 
 export { queryPolicy };
+
+export interface ResourcePageOptions { cursor?: string | null; limit?: number; }

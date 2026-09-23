@@ -146,7 +146,7 @@ version = cacheBuster();
 const updated = await api.getArtist(partyId);
 ```
 
-The `v` parameter is intentionally resource-scoped. It is added to mutable public
+For legacy methods, the `v` parameter is intentionally resource-scoped. It is added to mutable public
 reads such as artists, pressings, listings, releases, and expanded record albums.
 It is not added to private wallet reads, immutable purchase receipts, or the bare
 record-to-release relation, preventing useless cache namespaces.
@@ -227,3 +227,48 @@ the existing full Audio shape: `format`, `channels`, `bit_depth`, `sample_rate_h
 
 Before using this candidate against production, deploy the matching API and handle
 previous cached modular bodies (fresh versioned reads or verified cache rotation).
+
+### Remaining modular resources
+
+These additive methods use flat `/v1` resource URLs through `modularPrefix` and
+keep the existing aggregate methods available:
+
+| Resources | Methods |
+| --- | --- |
+| Pressings and listings | `getPressingCore`, `getPressingListingResource` |
+| Record facts | `getRecordCore`, `getRecordPurchase` |
+| Party invitations | `getPartyPendingMemberships` |
+| Wallet inventories | `listWalletRecordReferences`, `listWalletPartyCapabilities`, `listWalletWorkCapabilities` |
+| Capability and work references | `getWorkCapability`, `getWorkCapabilityReference`, `getShareWorkReference` |
+| Currency | `getWalletBalanceResource`, `getCoinMetadata` |
+| Stakes and claims | `getStakeCore`, `getStakeRegistrations`, `listWalletStakeResources`, `listWalletRoyaltyClaimsResource` |
+| Ownership and sale events | `getPartyOwnershipResource`, `getRecordOwnershipResource`, `getTransactionSale` |
+
+Inventories contain references, not hydrated albums or artist profiles. Capability
+inventory requires both `kind` (`composition`, `recording`, or `release`) and
+`custody` (`direct` or `vaulted`). Owned-object pages accept `cursor` and `limit`
+(default 50, maximum 100). Keep the wallet and filters unchanged between pages.
+A filtered vaulted-capability page can be empty while `nextCursor` is non-null;
+continue until the cursor is null. Royalty claims retain their separate `before`
+cursor and maximum page size of 50.
+
+`getPressingListingResource` returns the listing's `currencyType`, pricing, state,
+references, and exact `totalProceeds` as an unsigned 128-bit decimal string.
+It supplies no guessed symbol or decimal precision. `getCoinMetadata` provides
+currency display metadata separately. `getWalletBalanceResource` returns exact
+decimal strings for `balance`, `coinBalance`, and `addressBalance`; the components
+must sum to the total. Purchase and transaction-sale facts also preserve integer
+precision. They do not describe current ownership.
+
+Missing singleton resources return null; required wallet pages and operational
+failures throw. A capability reference can have a null `workId` when its mapping
+is absent or a release vault has no embedded capability. Capability references
+identify a work and do not assert that a vault currently grants authority.
+Recording discovery stops after 20 pages/1,000 objects. Pending memberships stop
+after 20 raw pages/1,000 fields or 100 matching invitations. Exhaustion returns
+503 instead of a partial result or false absence.
+
+All these new methods preserve request headers, custom fetch, and cancellation.
+When the client's `version()` supplies a cache-buster, they send `v` and use
+browser `cache: "no-store"`; matching API responses bypass browser and edge
+storage. Wallet and current-authority resources are always private/no-store.

@@ -46,3 +46,5 @@ export type * from "./types.js";
 
 export { PARTY_CACHE_POLICY, partyCachePolicy, partyQueryPolicy } from "./cache.js";
 export type { PartyCore, PartyProfile, PartyMembers, PartyGenres, PartyLinks, PartyCtas, PartyRoles, PartyTags } from "./types.js";
+
+export type { ResourcePageOptions } from "./client.js";
