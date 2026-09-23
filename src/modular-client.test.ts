@@ -83,9 +83,9 @@ describe("modular client methods", () => {
     const absent = stubFetch({ status: 404 });
     expect(await createMisoApiClient({ baseUrl: BASE, fetch: absent.fetch }).getRecordingMaster("0x1")).toBeNull();
 
-    const attached = stubFetch({ body: { recordingId: "0x1", masterBlobId: null } });
+    const attached = stubFetch({ body: { recordingId: "0x1", masterBlobId: null, master: null } });
     await expect(createMisoApiClient({ baseUrl: BASE, fetch: attached.fetch }).getRecordingMaster("0x1"))
-      .resolves.toEqual({ recordingId: "0x1", masterBlobId: null });
+      .resolves.toEqual({ recordingId: "0x1", masterBlobId: null, master: null });
 
     const failed = stubFetch({ status: 500, body: { error: { code: "upstream", message: "down" } } });
     await expect(createMisoApiClient({ baseUrl: BASE, fetch: failed.fetch }).getReleaseCore("0x1"))

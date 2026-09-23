@@ -29,18 +29,25 @@ const credit = { partyId, displayName: "Astra", roles: ["Composer"] };
 
 describe("modular response schemas", () => {
   test("accepts all resource families and reuses current core/lyrics/cover shapes", () => {
-    const composition = { id: compositionId, state: published, title: "Song", royaltyRate: { value: 1000 } };
-    const recording = { id: recordingId, state: published, compositionId };
+    const composition = { shareType: "0x2::composition_share::SHARE", id: compositionId, state: published, title: "Song", royaltyRate: { value: 1000 } };
+    const recording = { shareType: "0x2::recording_share::SHARE", id: recordingId, state: published, compositionId };
     const engineSession = { sessionBlobId: blobId, stems: [{ digest: "a".repeat(64), blobId }] };
     const tracks = [{ position: 1, state: "Assigned" as const, compositionId, recordingId, splitBps: 10000 }];
     expect(compositionCoreSchema.parse(composition)).toEqual(composition);
-    expect(compositionCoreSchema).toBe(compositionViewSchema);
+    expect(compositionViewSchema.safeParse({ ...composition, shareType: undefined }).success).toBe(true);
     expect(compositionCreditsSchema.parse({ compositionId, credits: [credit] })).toEqual({ compositionId, credits: [credit] });
     expect(compositionLyricsResourceSchema.parse({ compositionId, lyrics: [{ language: "en", text: "Verse" }] })).toEqual({ compositionId, lyrics: [{ language: "en", text: "Verse" }] });
-    expect(recordingCoreSchema).toBe(recordingViewSchema);
+    expect(recordingViewSchema.safeParse({ ...recording, shareType: undefined }).success).toBe(true);
     expect(recordingCoreSchema.parse(recording)).toEqual(recording);
     expect(recordingCreditsResourceSchema.parse({ recordingId, credits: [credit], primaryArtistIds: [partyId], featuredArtistIds: [] })).toEqual({ recordingId, credits: [credit], primaryArtistIds: [partyId], featuredArtistIds: [] });
-    expect(recordingMasterResourceSchema.parse({ recordingId, masterBlobId: blobId })).toEqual({ recordingId, masterBlobId: blobId });
+    const master = { format: "flac", channels: 2, bit_depth: 24, sample_rate_hz: 96000, samples: "9007199254740993", pcm_digest: Array(32).fill(17), blob_id: "0" };
+    expect(recordingMasterResourceSchema.parse({ recordingId, masterBlobId: blobId, master })).toEqual({ recordingId, masterBlobId: blobId, master });
+    expect(recordingMasterResourceSchema.parse({ recordingId, masterBlobId: null, master: null })).toEqual({ recordingId, masterBlobId: null, master: null });
+    expect(compositionCoreSchema.safeParse({ ...composition, shareType: undefined }).success).toBe(false);
+    expect(recordingCoreSchema.safeParse({ ...recording, shareType: undefined }).success).toBe(false);
+    expect(compositionCoreSchema.safeParse({ ...composition, shareType: "" }).success).toBe(false);
+    expect(recordingCoreSchema.safeParse({ ...recording, shareType: "" }).success).toBe(false);
+    expect(recordingMasterResourceSchema.safeParse({ recordingId, masterBlobId: blobId }).success).toBe(false);
     expect(recordingStreamSchema.parse({ recordingId, transcodeQuiltId: blobId })).toEqual({ recordingId, transcodeQuiltId: blobId });
     expect(recordingEngineSessionSchema.parse({ recordingId, engineSession })).toEqual({ recordingId, engineSession });
     expect(releaseCoreSchema.parse({ id: releaseId, state: published, title: "EP", trackCount: 1 })).toEqual({ id: releaseId, state: published, title: "EP", trackCount: 1 });

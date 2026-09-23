@@ -123,7 +123,10 @@ export const compositionLyricsSchema = z.object({
 // legacy protocol reads and modular reads cannot drift apart.
 
 /** Canonical composition core response. */
-export const compositionCoreSchema = compositionViewSchema;
+export const compositionCoreSchema = compositionViewSchema.extend({
+  /** Canonical on-chain Composition<T> share type. Required on modular reads. */
+  shareType: z.string().min(1),
+});
 
 /** Composition writing credits, without hydrating party profiles. */
 export const compositionCreditsSchema = z.object({
@@ -135,7 +138,10 @@ export const compositionCreditsSchema = z.object({
 export const compositionLyricsResourceSchema = compositionLyricsSchema;
 
 /** Canonical recording core response. */
-export const recordingCoreSchema = recordingViewSchema;
+export const recordingCoreSchema = recordingViewSchema.extend({
+  /** Recording<RecordingShare, CompositionShare>: the first type argument. */
+  shareType: z.string().min(1),
+});
 
 /** Recording credits, including the parent recording identity. */
 export const recordingCreditsResourceSchema = z.object({
@@ -148,6 +154,8 @@ export const recordingCreditsResourceSchema = z.object({
 /** Optional archival master attachment for a recording. */
 export const recordingMasterResourceSchema = z.object({
   recordingId: suiIdSchema,
+  /** Complete Audio metadata, preserving the rich release master representation. */
+  master: recordingMasterSchema.nullable(),
   masterBlobId: walrusBlobIdSchema.nullable(),
 });
 

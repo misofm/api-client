@@ -211,3 +211,19 @@ and versioned browser no-store, preserving existing artist methods and URLs.
 
 `partyCachePolicy()` specifies browser 30s, edge 60s, and edge SWR 300s.
 `partyQueryPolicy({ versioned })` gives client freshness without a publication state.
+
+### Work share types and full master metadata
+
+Modular `getCompositionCore` and `getRecordingCore` require a canonical `shareType`
+from the actual on-chain generic argument. Recording share type is the first
+argument of `Recording<RecordingShare, CompositionShare>`. Legacy rich schemas
+retain their existing compatibility with responses that omit share types.
+
+`getRecordingMaster` returns `{ recordingId, masterBlobId, master }`. `master` has
+the existing full Audio shape: `format`, `channels`, `bit_depth`, `sample_rate_hz`,
+`samples`, `pcm_digest`, and `blob_id`. The two integer strings retain precision;
+`masterBlobId` remains the base64url playback/storage reference. When absent, both
+`master` and `masterBlobId` are null.
+
+Before using this candidate against production, deploy the matching API and handle
+previous cached modular bodies (fresh versioned reads or verified cache rotation).
