@@ -272,3 +272,13 @@ All these new methods preserve request headers, custom fetch, and cancellation.
 When the client's `version()` supplies a cache-buster, they send `v` and use
 browser `cache: "no-store"`; matching API responses bypass browser and edge
 storage. Wallet and current-authority resources are always private/no-store.
+
+Composition and recording modular methods accept either an object ID or a share
+type (`0x{packageId}::share::Share`) as their first argument, including all
+subresources. Pass the raw type; the SDK URL-encodes it. Responses always contain
+canonical object IDs. Release and legacy protocol methods still accept object IDs.
+
+```ts
+await api.getCompositionCore(compositionShareType);
+await api.getRecordingMaster(recordingShareType);
+```

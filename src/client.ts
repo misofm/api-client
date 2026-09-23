@@ -368,89 +368,89 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
   };
 
   const getCompositionCore = (
-    compositionId: string,
+    compositionIdOrShareType: string,
     opts: MisoRequestOptions = {},
   ): Promise<CompositionCore | null> =>
     request(
       s.compositionCoreSchema,
-      `/compositions/${segment(compositionId)}`,
+      `/compositions/${segment(compositionIdOrShareType)}`,
       {},
       { ...opts, nullOn404: true, mutable: true, modular: true },
     );
 
   const getCompositionCredits = (
-    compositionId: string,
+    compositionIdOrShareType: string,
     opts: MisoRequestOptions = {},
   ): Promise<CompositionCredits | null> =>
     request(
       s.compositionCreditsSchema,
-      `/compositions/${segment(compositionId)}/credits`,
+      `/compositions/${segment(compositionIdOrShareType)}/credits`,
       {},
       { ...opts, nullOn404: true, mutable: true, modular: true },
     );
 
   const getCompositionLyricsResource = (
-    compositionId: string,
+    compositionIdOrShareType: string,
     opts: MisoRequestOptions = {},
   ): Promise<CompositionLyricsResource | null> =>
     request(
       s.compositionLyricsResourceSchema,
-      `/compositions/${segment(compositionId)}/lyrics`,
+      `/compositions/${segment(compositionIdOrShareType)}/lyrics`,
       {},
       { ...opts, nullOn404: true, mutable: true, modular: true },
     );
 
   const getRecordingCore = (
-    recordingId: string,
+    recordingIdOrShareType: string,
     opts: MisoRequestOptions = {},
   ): Promise<RecordingCore | null> =>
     request(
       s.recordingCoreSchema,
-      `/recordings/${segment(recordingId)}`,
+      `/recordings/${segment(recordingIdOrShareType)}`,
       {},
       { ...opts, nullOn404: true, mutable: true, modular: true },
     );
 
   const getRecordingCredits = (
-    recordingId: string,
+    recordingIdOrShareType: string,
     opts: MisoRequestOptions = {},
   ): Promise<RecordingCreditsResource | null> =>
     request(
       s.recordingCreditsResourceSchema,
-      `/recordings/${segment(recordingId)}/credits`,
+      `/recordings/${segment(recordingIdOrShareType)}/credits`,
       {},
       { ...opts, nullOn404: true, mutable: true, modular: true },
     );
 
   const getRecordingMaster = (
-    recordingId: string,
+    recordingIdOrShareType: string,
     opts: MisoRequestOptions = {},
   ): Promise<RecordingMasterResource | null> =>
     request(
       s.recordingMasterResourceSchema,
-      `/recordings/${segment(recordingId)}/master`,
+      `/recordings/${segment(recordingIdOrShareType)}/master`,
       {},
       { ...opts, nullOn404: true, mutable: true, modular: true },
     );
 
   const getRecordingStream = (
-    recordingId: string,
+    recordingIdOrShareType: string,
     opts: MisoRequestOptions = {},
   ): Promise<RecordingStream | null> =>
     request(
       s.recordingStreamSchema,
-      `/recordings/${segment(recordingId)}/stream`,
+      `/recordings/${segment(recordingIdOrShareType)}/stream`,
       {},
       { ...opts, nullOn404: true, mutable: true, modular: true },
     );
 
   const getRecordingEngineSession = (
-    recordingId: string,
+    recordingIdOrShareType: string,
     opts: MisoRequestOptions = {},
   ): Promise<RecordingEngineSession | null> =>
     request(
       s.recordingEngineSessionSchema,
-      `/recordings/${segment(recordingId)}/engine-session`,
+      `/recordings/${segment(recordingIdOrShareType)}/engine-session`,
       {},
       { ...opts, nullOn404: true, mutable: true, modular: true },
     );

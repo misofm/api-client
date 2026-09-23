@@ -96,3 +96,13 @@ describe("modular client methods", () => {
       .rejects.toBeInstanceOf(MisoApiContractError);
   });
 });
+
+test("all composition and recording methods encode raw share types as one path segment", async () => {
+  const { fetch, calls } = stubFetch({ status: 404 });
+  const api = createMisoApiClient({ baseUrl: BASE, fetch });
+  const share = "0xabc::share::Share";
+  for (const [method, id, path] of methods.filter(([name]) => !name.startsWith("getRelease"))) {
+    expect(await api[method](share)).toBeNull();
+    expect(new URL(calls.at(-1)!).pathname).toBe(path.replace(id, encodeURIComponent(share)));
+  }
+});
