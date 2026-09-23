@@ -259,3 +259,10 @@ export const MODULAR_READ_RESOURCE = {
 } as const satisfies Record<string, ModularResourceClass>;
 
 export type ModularReadMethod = keyof typeof MODULAR_READ_RESOURCE;
+
+/** Parties are always mutable and do not have a work publication state. */
+export const PARTY_CACHE_POLICY: ModularCachePolicy = { browserMaxAge: 30, edgeMaxAge: 60, staleWhileRevalidate: 300 };
+export function partyCachePolicy(): ModularCachePolicy { return { ...PARTY_CACHE_POLICY }; }
+export function partyQueryPolicy(options: ModularQueryPolicyOptions = {}): { staleTime: number } {
+  return { staleTime: options.versioned ? 0 : PARTY_CACHE_POLICY.browserMaxAge * 1000 };
+}

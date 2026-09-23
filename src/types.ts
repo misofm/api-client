@@ -80,3 +80,12 @@ export type RoyaltyClaimsPage = z.infer<typeof s.royaltyClaimsPageSchema>;
 export type RoyaltyStake = z.infer<typeof s.royaltyStakeSchema>;
 export type RoyaltyStakeWork = z.infer<typeof s.royaltyStakeWorkSchema>;
 export type RoyaltyStakesPage = z.infer<typeof s.royaltyStakesPageSchema>;
+
+export type PartyCore = z.infer<typeof s.partyCoreSchema>;
+export type PartyProfile = z.infer<typeof s.partyProfileSchema>;
+export type PartyMembers = z.infer<typeof s.partyMembersSchema>;
+export type PartyGenres = z.infer<typeof s.partyGenresSchema>;
+export type PartyLinks = z.infer<typeof s.partyLinksSchema>;
+export type PartyCtas = z.infer<typeof s.partyCtasSchema>;
+export type PartyRoles = z.infer<typeof s.partyRolesSchema>;
+export type PartyTags = z.infer<typeof s.partyTagsSchema>;

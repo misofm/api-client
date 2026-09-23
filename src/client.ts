@@ -1,3 +1,4 @@
+import type { PartyCore, PartyProfile, PartyMembers, PartyGenres, PartyLinks, PartyCtas, PartyRoles, PartyTags } from "./types.js";
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -335,6 +336,36 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
       { include: opts.include?.join(",") },
       { ...opts, nullOn404: true, mutable: true },
     );
+
+  const getPartyCore = (partyId: string, opts: MisoRequestOptions = {}): Promise<PartyCore | null> =>
+    request(s.partyCoreSchema, `/parties/${segment(partyId)}`, {}, { ...opts, nullOn404: true, mutable: true, modular: true });
+
+  const getPartyProfile = (partyId: string, opts: MisoRequestOptions = {}): Promise<PartyProfile | null> =>
+    request(s.partyProfileSchema, `/parties/${segment(partyId)}/profile`, {}, { ...opts, nullOn404: true, mutable: true, modular: true });
+
+  const getPartyMembers = (partyId: string, opts: MisoRequestOptions = {}): Promise<PartyMembers | null> =>
+    request(s.partyMembersSchema, `/parties/${segment(partyId)}/members`, {}, { ...opts, nullOn404: true, mutable: true, modular: true });
+
+  const getPartyGenres = (partyId: string, opts: MisoRequestOptions = {}): Promise<PartyGenres | null> =>
+    request(s.partyGenresSchema, `/parties/${segment(partyId)}/genres`, {}, { ...opts, nullOn404: true, mutable: true, modular: true });
+
+  const getPartyLinks = (partyId: string, opts: MisoRequestOptions = {}): Promise<PartyLinks | null> =>
+    request(s.partyLinksSchema, `/parties/${segment(partyId)}/links`, {}, { ...opts, nullOn404: true, mutable: true, modular: true });
+
+  const getPartyCtas = (partyId: string, opts: MisoRequestOptions = {}): Promise<PartyCtas | null> =>
+    request(s.partyCtasSchema, `/parties/${segment(partyId)}/ctas`, {}, { ...opts, nullOn404: true, mutable: true, modular: true });
+
+  const getPartyRoles = (partyId: string, opts: MisoRequestOptions = {}): Promise<PartyRoles | null> =>
+    request(s.partyRolesSchema, `/parties/${segment(partyId)}/roles`, {}, { ...opts, nullOn404: true, mutable: true, modular: true });
+
+  const getPartyTags = (partyId: string, opts: MisoRequestOptions = {}): Promise<PartyTags | null> =>
+    request(s.partyTagsSchema, `/parties/${segment(partyId)}/tags`, {}, { ...opts, nullOn404: true, mutable: true, modular: true });
+
+  const listParties = (ids: readonly string[], opts: MisoRequestOptions = {}): Promise<PartySummary[]> => {
+    if (ids.length > 100) return Promise.reject(new RangeError("At most 100 party IDs are allowed."));
+    if (ids.length === 0) return Promise.resolve([]);
+    return required(s.partySummariesSchema, "/parties", { ids: ids.join(",") }, { ...opts, mutable: true, modular: true });
+  };
 
   const getCompositionCore = (
     compositionId: string,
@@ -683,6 +714,15 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     );
 
   return {
+    listParties,
+    getPartyCore,
+    getPartyProfile,
+    getPartyMembers,
+    getPartyGenres,
+    getPartyLinks,
+    getPartyCtas,
+    getPartyRoles,
+    getPartyTags,
     getComposition,
     getCompositionLyrics,
     getRecording,

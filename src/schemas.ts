@@ -650,3 +650,24 @@ export const royaltyClaimsPageSchema = z.object({
   /** Earliest timestamp the event index still covers, or null if unknown. */
   availableFromMs: z.number().int().nullable(),
 });
+
+// Independent Party resources; extensions never appear on the core response.
+export const partyCoreSchema = z.object({
+  id: suiIdSchema,
+  kind: z.enum(["individual", "group"]),
+  name: z.string(),
+  createdAtMs: z.number().int(),
+}).strict();
+export const partyProfileSchema = z.object({
+  partyId: suiIdSchema,
+  profile: z.object({
+    bioShort: z.string(), bioLong: z.string().nullable(),
+    country: z.string().nullable(), languages: z.array(z.string()),
+  }).strict().nullable(),
+}).strict();
+export const partyMembersSchema = z.object({ partyId: suiIdSchema, memberIds: z.array(suiIdSchema) }).strict();
+export const partyGenresSchema = z.object({ partyId: suiIdSchema, genres: z.array(z.object({ id: suiIdSchema, name: z.string().nullable() }).strict()) }).strict();
+export const partyLinksSchema = z.object({ partyId: suiIdSchema, links: z.array(partyLinkSchema) }).strict();
+export const partyCtasSchema = z.object({ partyId: suiIdSchema, ctas: z.array(partyCtaSchema) }).strict();
+export const partyRolesSchema = z.object({ partyId: suiIdSchema, roles: z.array(artistRoleSchema) }).strict();
+export const partyTagsSchema = z.object({ partyId: suiIdSchema, tags: z.array(z.string()) }).strict();

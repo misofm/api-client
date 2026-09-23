@@ -197,3 +197,17 @@ The schemas are the source of truth shared by the read service, generated API
 description, and consumers. The package is maintained in the
 [`misofm/api-client`](https://github.com/misofm/api-client) repository and
 licensed under Apache-2.0.
+
+### Modular parties
+
+`listParties(ids)` reads summaries from `/v1/parties?ids=…` (up to 100 IDs; an empty
+list returns locally). `getPartyCore(id)` reads identity, kind, name, and creation
+time. Independent `getPartyProfile`, `getPartyMembers`, `getPartyGenres`,
+`getPartyLinks`, `getPartyCtas`, `getPartyRoles`, and `getPartyTags` methods use
+`/v1/parties/:id/<resource>`. Members are IDs; roles retain structured identities.
+Absent parents return null; missing extensions return a null profile or empty
+collection. Operational failures remain errors. These methods use `modularPrefix`
+and versioned browser no-store, preserving existing artist methods and URLs.
+
+`partyCachePolicy()` specifies browser 30s, edge 60s, and edge SWR 300s.
+`partyQueryPolicy({ versioned })` gives client freshness without a publication state.
