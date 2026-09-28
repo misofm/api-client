@@ -116,6 +116,113 @@ export const compositionLyricsSchema = z.object({
   lyrics: z.array(z.object({ language: z.string().min(1), text: z.string() })),
 });
 
+// ── Modular resources ───────────────────────────────────────────────────────
+//
+// Canonical modular endpoints keep the parent identity in every extension
+// response. Core and lyrics resources reuse the already-published contracts so
+// legacy protocol reads and modular reads cannot drift apart.
+
+/** Canonical composition core response. */
+export const compositionCoreSchema = compositionViewSchema.extend({
+  /** Canonical on-chain Composition<T> share type. Required on modular reads. */
+  shareType: z.string().min(1),
+});
+
+/** Composition writing credits, without hydrating party profiles. */
+export const compositionCreditsSchema = z.object({
+  compositionId: suiIdSchema,
+  credits: z.array(creditSchema),
+});
+
+/** Decoded lyrics attached to a composition, grouped by language. */
+export const compositionLyricsResourceSchema = compositionLyricsSchema;
+
+/** Canonical recording core response. */
+export const recordingCoreSchema = recordingViewSchema.extend({
+  /** Recording<RecordingShare, CompositionShare>: the first type argument. */
+  shareType: z.string().min(1),
+});
+
+/** Recording credits, including the parent recording identity. */
+export const recordingCreditsResourceSchema = z.object({
+  recordingId: suiIdSchema,
+  credits: z.array(creditSchema),
+  primaryArtistIds: z.array(suiIdSchema),
+  featuredArtistIds: z.array(suiIdSchema),
+});
+
+/** Optional archival master attachment for a recording. */
+export const recordingMasterResourceSchema = z.object({
+  recordingId: suiIdSchema,
+  /** Complete Audio metadata, preserving the rich release master representation. */
+  master: recordingMasterSchema.nullable(),
+  masterBlobId: walrusBlobIdSchema.nullable(),
+});
+
+/** Optional streaming transcode attachment for a recording. */
+export const recordingStreamSchema = z.object({
+  recordingId: suiIdSchema,
+  transcodeQuiltId: walrusBlobIdSchema.nullable(),
+});
+
+/** Optional Miso Engine session attachment for a recording. */
+export const recordingEngineSessionSchema = z.object({
+  recordingId: suiIdSchema,
+  engineSession: trackEngineSessionSchema.nullable(),
+});
+
+/** Canonical release core response. */
+export const releaseCoreSchema = z.object({
+  id: suiIdSchema,
+  state: workStateSchema,
+  title: z.string(),
+  trackCount: z.number().int().nonnegative(),
+});
+
+const releaseTrackResourceSchema = z.object({
+  position: z.number().int().positive(),
+  state: z.enum(["Assigned", "Unassigned"]),
+  compositionId: suiIdSchema,
+  recordingId: suiIdSchema,
+  splitBps: z.number().int().min(0).max(10_000),
+});
+
+/** Ordered release tracks, retaining repeated recording references. */
+export const releaseTracksSchema = z.object({
+  releaseId: suiIdSchema,
+  tracks: z.array(releaseTrackResourceSchema),
+});
+
+/** Release credits, without hydrating party profiles. */
+export const releaseCreditsSchema = z.object({
+  releaseId: suiIdSchema,
+  credits: z.array(creditSchema),
+});
+
+/** Optional cover attachment for a release. */
+export const releaseCoverSchema = z.object({
+  releaseId: suiIdSchema,
+  cover: coverSchema.nullable(),
+});
+
+/** Optional self-declared release kind. */
+export const releaseKindSchema = z.object({
+  releaseId: suiIdSchema,
+  kind: z.string().nullable(),
+});
+
+/** Optional release description. */
+export const releaseDescriptionSchema = z.object({
+  releaseId: suiIdSchema,
+  description: z.string().nullable(),
+});
+
+/** Release genres in chain order, retaining unresolved genre identities. */
+export const releaseGenresSchema = z.object({
+  releaseId: suiIdSchema,
+  genres: z.array(z.object({ id: suiIdSchema, name: z.string().nullable() })),
+});
+
 export const trackViewSchema = z.object({
   /** Display number — "1", or "1.2" (disc.track) on a multi-disc set. */
   no: z.string(),
@@ -551,3 +658,49 @@ export const royaltyClaimsPageSchema = z.object({
   /** Earliest timestamp the event index still covers, or null if unknown. */
   availableFromMs: z.number().int().nullable(),
 });
+
+// Independent Party resources; extensions never appear on the core response.
+export const partyCoreSchema = z.object({
+  id: suiIdSchema,
+  kind: z.enum(["individual", "group"]),
+  name: z.string(),
+  createdAtMs: z.number().int(),
+}).strict();
+export const partyProfileSchema = z.object({
+  partyId: suiIdSchema,
+  profile: z.object({
+    bioShort: z.string(), bioLong: z.string().nullable(),
+    country: z.string().nullable(), languages: z.array(z.string()),
+  }).strict().nullable(),
+}).strict();
+export const partyMembersSchema = z.object({ partyId: suiIdSchema, memberIds: z.array(suiIdSchema) }).strict();
+export const partyGenresSchema = z.object({ partyId: suiIdSchema, genres: z.array(z.object({ id: suiIdSchema, name: z.string().nullable() }).strict()) }).strict();
+export const partyLinksSchema = z.object({ partyId: suiIdSchema, links: z.array(partyLinkSchema) }).strict();
+export const partyCtasSchema = z.object({ partyId: suiIdSchema, ctas: z.array(partyCtaSchema) }).strict();
+export const partyRolesSchema = z.object({ partyId: suiIdSchema, roles: z.array(artistRoleSchema) }).strict();
+export const partyTagsSchema = z.object({ partyId: suiIdSchema, tags: z.array(z.string()) }).strict();
+
+// Remaining modular reads: references and independent facts, never expanded albums.
+export const pressingListingResourceSchema = z.object({
+  id: suiIdSchema, pressingId: suiIdSchema, releaseId: suiIdSchema, pricing: priceSchema,
+  currencyType: z.string().min(1), state: z.enum(["enabled", "disabled"]),
+  totalProceeds: u64Schema.refine(value => !/^\d+$/.test(value) || BigInt(value) <= (1n << 128n) - 1n, { message: "Proceeds must fit an unsigned 128-bit integer" }),
+}).strict();
+export const recordCoreSchema = z.object({ id: suiIdSchema, releaseId: suiIdSchema, pressingId: suiIdSchema, edition: u16Schema.min(1), number: u32Schema.min(1) }).strict();
+export const recordPurchaseSchema = z.object({ recordId: suiIdSchema, purchaseCurrency: z.string().min(1), purchasePrice: u64Schema, purchasedBy: suiIdSchema, purchasedTimestampMs: u64Schema }).strict();
+export const partyPendingMembershipsSchema = z.object({ partyId: suiIdSchema, groupIds: z.array(suiIdSchema) }).strict();
+export const walletRecordReferencesSchema = z.object({ records: z.array(z.object({ recordId: suiIdSchema, releaseId: suiIdSchema, pressingId: suiIdSchema }).strict()), nextCursor: z.string().nullable() }).strict();
+export const walletPartyCapabilitiesSchema = z.object({ capabilities: z.array(z.object({ capId: suiIdSchema, partyId: suiIdSchema }).strict()), nextCursor: z.string().nullable() }).strict();
+export const workCapabilitySchema = z.object({ capId: suiIdSchema, kind: workKindSchema, custody: z.enum(["direct", "vaulted"]), shareType: z.string().nullable(), workId: suiIdSchema.nullable(), vaultId: suiIdSchema.nullable() }).strict();
+export const walletWorkCapabilitiesSchema = z.object({ capabilities: z.array(workCapabilitySchema), nextCursor: z.string().nullable() }).strict();
+export const workCapabilityReferenceSchema = z.object({ capId: suiIdSchema, kind: workKindSchema, workId: suiIdSchema.nullable(), shareType: z.string().nullable() }).strict();
+export const shareWorkReferenceSchema = z.object({ kind: z.enum(["composition", "recording"]), workId: suiIdSchema, shareType: z.string().min(1) }).strict();
+export const walletBalanceResourceSchema = z.object({ address: suiIdSchema, coinType: z.string().min(1), balance: z.string().regex(/^\d+$/), coinBalance: z.string().regex(/^\d+$/), addressBalance: z.string().regex(/^\d+$/) }).strict().refine(v =>
+  ![v.balance, v.coinBalance, v.addressBalance].every(part => /^\d+$/.test(part)) || BigInt(v.balance) === BigInt(v.coinBalance) + BigInt(v.addressBalance),
+{ message: "Balance components must sum to total" });
+export const coinMetadataResourceSchema = z.object({ coinType: z.string().min(1), decimals: z.number().int().min(0).max(255), name: z.string(), symbol: z.string(), description: z.string(), iconUrl: z.string().nullable() }).strict();
+export const stakeCoreSchema = royaltyStakeSchema.pick({ id: true, shareType: true, balance: true }).strict();
+export const stakeRegistrationsSchema = z.object({ stakeId: suiIdSchema, registrations: royaltyStakeSchema.shape.registrations }).strict();
+export const walletStakeResourcesSchema = z.object({ stakes: z.array(stakeCoreSchema), nextCursor: z.string().nullable() }).strict();
+export const transactionSaleResourceSchema = z.object({ transactionDigest: z.string().min(1), sale: recordSaleSchema }).strict();
+export { publicConfigSchema } from "./config.js";

@@ -153,3 +153,116 @@ export function recordAlbumQueryPolicy(
 ): { staleTime: number } {
   return queryPolicy(recordAlbumCacheClass(album, options));
 }
+
+/** Cache classes used by canonical modular resource endpoints. */
+export type ModularResourceClass = "core" | "metadata" | "attachment";
+export type ModularWorkState = "published" | "draft";
+
+export interface ModularCachePolicy {
+  readonly browserMaxAge: number;
+  readonly edgeMaxAge: number;
+  readonly staleWhileRevalidate: number | null;
+}
+
+/** Shared modular policy table used by the API service and this client. */
+export const MODULAR_CACHE_POLICIES: Record<
+  `${ModularWorkState}-${ModularResourceClass}`,
+  ModularCachePolicy
+> = {
+  "published-core": {
+    browserMaxAge: 300,
+    edgeMaxAge: 3600,
+    staleWhileRevalidate: 86400,
+  },
+  "draft-core": {
+    browserMaxAge: 0,
+    edgeMaxAge: 60,
+    staleWhileRevalidate: 300,
+  },
+  "published-metadata": {
+    browserMaxAge: 30,
+    edgeMaxAge: 60,
+    staleWhileRevalidate: 300,
+  },
+  "draft-metadata": {
+    browserMaxAge: 0,
+    edgeMaxAge: 60,
+    staleWhileRevalidate: null,
+  },
+  "published-attachment": {
+    browserMaxAge: 0,
+    edgeMaxAge: 60,
+    staleWhileRevalidate: null,
+  },
+  "draft-attachment": {
+    browserMaxAge: 0,
+    edgeMaxAge: 60,
+    staleWhileRevalidate: null,
+  },
+};
+
+export function modularCachePolicy(
+  state: { readonly type: string } | ModularWorkState | undefined,
+  resource: ModularResourceClass,
+): ModularCachePolicy {
+  const normalizedState =
+    typeof state === "string"
+      ? state
+      : state?.type === "Published"
+        ? "published"
+        : "draft";
+  return MODULAR_CACHE_POLICIES[`${normalizedState}-${resource}`];
+}
+
+export function modularBrowserCacheControl(policy: ModularCachePolicy): string {
+  return `public, max-age=${policy.browserMaxAge}`;
+}
+
+export function modularEdgeCacheControl(policy: ModularCachePolicy): string {
+  const swr =
+    policy.staleWhileRevalidate === null
+      ? ""
+      : `, stale-while-revalidate=${policy.staleWhileRevalidate}`;
+  return `public, max-age=${policy.edgeMaxAge}${swr}`;
+}
+
+export interface ModularQueryPolicyOptions {
+  versioned?: boolean;
+}
+
+/** TanStack Query freshness for a modular resource without implicit parent reads. */
+export function modularQueryPolicy(
+  state: { readonly type: string } | ModularWorkState | null | undefined,
+  resource: ModularResourceClass,
+  options: ModularQueryPolicyOptions = {},
+): { staleTime: number } {
+  if (options.versioned || state == null) return { staleTime: 0 };
+  return { staleTime: modularCachePolicy(state, resource).browserMaxAge * 1000 };
+}
+
+export const MODULAR_READ_RESOURCE = {
+  getCompositionCore: "core",
+  getCompositionCredits: "metadata",
+  getCompositionLyricsResource: "metadata",
+  getRecordingCore: "core",
+  getRecordingCredits: "metadata",
+  getRecordingMaster: "attachment",
+  getRecordingStream: "attachment",
+  getRecordingEngineSession: "attachment",
+  getReleaseCore: "core",
+  getReleaseTracks: "core",
+  getReleaseCredits: "metadata",
+  getReleaseCover: "metadata",
+  getReleaseKind: "metadata",
+  getReleaseDescription: "metadata",
+  getReleaseGenres: "metadata",
+} as const satisfies Record<string, ModularResourceClass>;
+
+export type ModularReadMethod = keyof typeof MODULAR_READ_RESOURCE;
+
+/** Parties are always mutable and do not have a work publication state. */
+export const PARTY_CACHE_POLICY: ModularCachePolicy = { browserMaxAge: 30, edgeMaxAge: 60, staleWhileRevalidate: 300 };
+export function partyCachePolicy(): ModularCachePolicy { return { ...PARTY_CACHE_POLICY }; }
+export function partyQueryPolicy(options: ModularQueryPolicyOptions = {}): { staleTime: number } {
+  return { staleTime: options.versioned ? 0 : PARTY_CACHE_POLICY.browserMaxAge * 1000 };
+}

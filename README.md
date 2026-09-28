@@ -6,12 +6,14 @@ values stay decimal strings so JavaScript never silently loses precision.
 
 ## Install
 
-Modular protocol reads are available through `getComposition(id)`,
-`getRecording(id)`, and `getCompositionLyrics(id)`. Lyrics are fetched only by
-the latter and return `{ compositionId, lyrics: [{ language, text }] }` with
-decoded UTF-8 text. Missing objects return `null`; an existing composition
-without lyrics returns an empty list. All three methods support cancellation
-and the client's mutable-resource cache version.
+Modular protocol reads are available through `getCompositionCore`,
+`getRecordingCore`, `getReleaseCore`, and their credits, lyrics, tracks, cover,
+metadata, and audio attachment methods. The existing `getComposition(id)`,
+`getRecording(id)`, and `getCompositionLyrics(id)` methods remain available on
+their published protocol routes. Lyrics return decoded UTF-8 text. Missing
+objects return `null`; an existing composition without lyrics returns an empty
+list. Modular methods support cancellation and the client's mutable-resource
+cache version.
 
 ```sh
 npm install @misofm/api-client
@@ -28,6 +30,7 @@ import { createMisoApiClient } from "@misofm/api-client";
 
 const api = createMisoApiClient({
   baseUrl: "https://api.testnet.miso.fm",
+  modularPrefix: "/v1",
 });
 
 const pressing = await api.getPressing(pressingId);
@@ -51,6 +54,7 @@ Singular resources use `get…`; collections use `list…`:
 | Area | Canonical methods |
 | --- | --- |
 | Catalog | `getPressing`, `getPressingListing`, `getRelease`, `getRecordAlbum` |
+| Modular resources | `getCompositionCore`, `getCompositionCredits`, `getCompositionLyricsResource`, `getRecordingCore`, `getRecordingCredits`, `getRecordingMaster`, `getRecordingStream`, `getRecordingEngineSession`, `getReleaseCore`, `getReleaseTracks`, `getReleaseCredits`, `getReleaseCover`, `getReleaseKind`, `getReleaseDescription`, `getReleaseGenres` |
 | Artists | `getArtist`, `listArtists` |
 | Wallet | `listWalletRecords`, `listWalletParties`, `listWalletPendingMemberships`, `listWalletWorks`, `listWalletWorkDetails`, `getWalletBalance`, `getWalletOwnership`, `getWalletPartyOwnership`, `getWalletRecordOwnership` |
 | Works and receipts | `getWork`, `getPurchaseReceipt` |
@@ -142,7 +146,7 @@ version = cacheBuster();
 const updated = await api.getArtist(partyId);
 ```
 
-The `v` parameter is intentionally resource-scoped. It is added to mutable public
+For legacy methods, the `v` parameter is intentionally resource-scoped. It is added to mutable public
 reads such as artists, pressings, listings, releases, and expanded record albums.
 It is not added to private wallet reads, immutable purchase receipts, or the bare
 record-to-release relation, preventing useless cache namespaces.
@@ -193,3 +197,113 @@ The schemas are the source of truth shared by the read service, generated API
 description, and consumers. The package is maintained in the
 [`misofm/api-client`](https://github.com/misofm/api-client) repository and
 licensed under Apache-2.0.
+
+### Modular parties
+
+`listParties(ids)` reads summaries from `/v1/parties?ids=…` (up to 100 IDs; an empty
+list returns locally). `getPartyCore(id)` reads identity, kind, name, and creation
+time. Independent `getPartyProfile`, `getPartyMembers`, `getPartyGenres`,
+`getPartyLinks`, `getPartyCtas`, `getPartyRoles`, and `getPartyTags` methods use
+`/v1/parties/:id/<resource>`. Members are IDs; roles retain structured identities.
+Absent parents return null; missing extensions return a null profile or empty
+collection. Operational failures remain errors. These methods use `modularPrefix`
+and versioned browser no-store, preserving existing artist methods and URLs.
+
+`partyCachePolicy()` specifies browser 30s, edge 60s, and edge SWR 300s.
+`partyQueryPolicy({ versioned })` gives client freshness without a publication state.
+
+### Work share types and full master metadata
+
+Modular `getCompositionCore` and `getRecordingCore` require a canonical `shareType`
+from the actual on-chain generic argument. Recording share type is the first
+argument of `Recording<RecordingShare, CompositionShare>`. Legacy rich schemas
+retain their existing compatibility with responses that omit share types.
+
+`getRecordingMaster` returns `{ recordingId, masterBlobId, master }`. `master` has
+the existing full Audio shape: `format`, `channels`, `bit_depth`, `sample_rate_hz`,
+`samples`, `pcm_digest`, and `blob_id`. The two integer strings retain precision;
+`masterBlobId` remains the base64url playback/storage reference. When absent, both
+`master` and `masterBlobId` are null.
+
+Before using this candidate against production, deploy the matching API and handle
+previous cached modular bodies (fresh versioned reads or verified cache rotation).
+
+### Remaining modular resources
+
+These additive methods use flat `/v1` resource URLs through `modularPrefix` and
+keep the existing aggregate methods available:
+
+| Resources | Methods |
+| --- | --- |
+| Pressings and listings | `getPressingCore`, `getPressingListingResource` |
+| Record facts | `getRecordCore`, `getRecordPurchase` |
+| Party invitations | `getPartyPendingMemberships` |
+| Wallet inventories | `listWalletRecordReferences`, `listWalletPartyCapabilities`, `listWalletWorkCapabilities` |
+| Capability and work references | `getWorkCapability`, `getWorkCapabilityReference`, `getShareWorkReference` |
+| Currency | `getWalletBalanceResource`, `getCoinMetadata` |
+| Stakes and claims | `getStakeCore`, `getStakeRegistrations`, `listWalletStakeResources`, `listWalletRoyaltyClaimsResource` |
+| Ownership and sale events | `getPartyOwnershipResource`, `getRecordOwnershipResource`, `getTransactionSale` |
+
+Inventories contain references, not hydrated albums or artist profiles. Capability
+inventory requires both `kind` (`composition`, `recording`, or `release`) and
+`custody` (`direct` or `vaulted`). Owned-object pages accept `cursor` and `limit`
+(default 50, maximum 100). Keep the wallet and filters unchanged between pages.
+A filtered vaulted-capability page can be empty while `nextCursor` is non-null;
+continue until the cursor is null. Royalty claims retain their separate `before`
+cursor and maximum page size of 50.
+
+`getPressingListingResource` returns the listing's `currencyType`, pricing, state,
+references, and exact `totalProceeds` as an unsigned 128-bit decimal string.
+It supplies no guessed symbol or decimal precision. `getCoinMetadata` provides
+currency display metadata separately. `getWalletBalanceResource` returns exact
+decimal strings for `balance`, `coinBalance`, and `addressBalance`; the components
+must sum to the total. Purchase and transaction-sale facts also preserve integer
+precision. They do not describe current ownership.
+
+Missing singleton resources return null; required wallet pages and operational
+failures throw. A capability reference can have a null `workId` when its mapping
+is absent or a release vault has no embedded capability. Capability references
+identify a work and do not assert that a vault currently grants authority.
+Recording discovery stops after 20 pages/1,000 objects. Pending memberships stop
+after 20 raw pages/1,000 fields or 100 matching invitations. Exhaustion returns
+503 instead of a partial result or false absence.
+
+All these new methods preserve request headers, custom fetch, and cancellation.
+When the client's `version()` supplies a cache-buster, they send `v` and use
+browser `cache: "no-store"`; matching API responses bypass browser and edge
+storage. Wallet and current-authority resources are always private/no-store.
+
+Composition and recording modular methods accept either an object ID or a share
+type (`0x{packageId}::share::Share`) as their first argument, including all
+subresources. Pass the raw type; the SDK URL-encodes it. Responses always contain
+canonical object IDs. Release and legacy protocol methods still accept object IDs.
+
+```ts
+await api.getCompositionCore(compositionShareType);
+await api.getRecordingMaster(recordingShareType);
+```
+## Public login configuration
+
+Before initializing login, fetch the deployment's public account configuration:
+
+```ts
+import { fetchPublicConfig } from "@misofm/api-client/config";
+const config = await fetchPublicConfig({
+  baseUrl: "https://api.mainnet.miso.fm",
+  network: "mainnet",
+  signal,
+});
+```
+
+The client also exposes `api.getPublicConfig(network, { signal })`. Both use
+`/v1/config` independently of the catalog prefix, omit credentials, reject
+redirects, and enforce a ten-second timeout. The response schema, network,
+identity version and SHA-256 fingerprint are validated before returning.
+No keys or Google audiences are embedded in this package. Failures throw;
+applications must offer retry rather than fall back to local keys.
+
+Configuration requests use browser cache: "no-cache": a saved HTTP response must
+be revalidated with the endpoint on each call. ETags allow an unchanged response
+to return 304; the browser supplies the saved body. The client does not keep
+configuration in localStorage or an application-level response cache. Errors
+throw without falling back to a previously loaded identity.
