@@ -1,6 +1,6 @@
 {
   "name": "@misofm/api-client",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "description": "Typed client and response contract for the Miso API read layer. The one definition of what a Miso read returns.",
   "license": "Apache-2.0",
   "repository": {
@@ -32,6 +32,10 @@
     "./cache": {
       "types": "./dist/cache.d.ts",
       "import": "./dist/cache.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js"
     }
   },
   "files": [

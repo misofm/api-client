@@ -48,3 +48,5 @@ export { PARTY_CACHE_POLICY, partyCachePolicy, partyQueryPolicy } from "./cache.
 export type { PartyCore, PartyProfile, PartyMembers, PartyGenres, PartyLinks, PartyCtas, PartyRoles, PartyTags } from "./types.js";
 
 export type { ResourcePageOptions } from "./client.js";
+export { fetchPublicConfig, validatePublicConfig, publicConfigSchema } from "./config.js";
+export type { PublicConfig, PublicConfigNetwork, PublicConfigOptions } from "./config.js";

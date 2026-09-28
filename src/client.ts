@@ -5,6 +5,7 @@ import type { PartyCore, PartyProfile, PartyMembers, PartyGenres, PartyLinks, Pa
 // The typed client for the Miso read API. Every response is parsed at the
 // boundary so API/client version skew fails loudly and locally.
 
+import { fetchPublicConfig, type PublicConfigNetwork } from "./config.js";
 import type { z } from "zod";
 import * as s from "./schemas.js";
 import { queryPolicy, type CacheClass } from "./cache.js";
@@ -749,6 +750,8 @@ export function createMisoApiClient(options: MisoApiClientOptions) {
     getPartyCtas,
     getPartyRoles,
     getPartyTags,
+    getPublicConfig: (network: PublicConfigNetwork, opts: Pick<MisoRequestOptions, "signal"> = {}) =>
+      fetchPublicConfig({ baseUrl: base, network, signal: opts.signal, fetch: doFetch }),
     getComposition,
     getCompositionLyrics,
     getRecording,

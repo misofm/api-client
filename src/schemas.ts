@@ -703,3 +703,4 @@ export const stakeCoreSchema = royaltyStakeSchema.pick({ id: true, shareType: tr
 export const stakeRegistrationsSchema = z.object({ stakeId: suiIdSchema, registrations: royaltyStakeSchema.shape.registrations }).strict();
 export const walletStakeResourcesSchema = z.object({ stakes: z.array(stakeCoreSchema), nextCursor: z.string().nullable() }).strict();
 export const transactionSaleResourceSchema = z.object({ transactionDigest: z.string().min(1), sale: recordSaleSchema }).strict();
+export { publicConfigSchema } from "./config.js";

@@ -106,3 +106,4 @@ export type StakeCore = z.infer<typeof s.stakeCoreSchema>;
 export type StakeRegistrations = z.infer<typeof s.stakeRegistrationsSchema>;
 export type WalletStakeResources = z.infer<typeof s.walletStakeResourcesSchema>;
 export type TransactionSaleResource = z.infer<typeof s.transactionSaleResourceSchema>;
+export type { PublicConfig, PublicConfigNetwork } from "./config.js";

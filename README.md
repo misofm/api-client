@@ -282,3 +282,22 @@ canonical object IDs. Release and legacy protocol methods still accept object ID
 await api.getCompositionCore(compositionShareType);
 await api.getRecordingMaster(recordingShareType);
 ```
+## Public login configuration
+
+Before initializing login, fetch the deployment's public account configuration:
+
+```ts
+import { fetchPublicConfig } from "@misofm/api-client/config";
+const config = await fetchPublicConfig({
+  baseUrl: "https://api.mainnet.miso.fm",
+  network: "mainnet",
+  signal,
+});
+```
+
+The client also exposes `api.getPublicConfig(network, { signal })`. Both use
+`/v1/config` independently of the catalog prefix, omit credentials, reject
+redirects, and enforce a ten-second timeout. The response schema, network,
+identity version and SHA-256 fingerprint are validated before returning.
+No keys or Google audiences are embedded in this package. Failures throw;
+applications must offer retry rather than fall back to local keys.

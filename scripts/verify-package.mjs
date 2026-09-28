@@ -12,7 +12,7 @@ const requiredFiles = [
   "LICENSE",
   "README.md",
   "package.json",
-  ...["index", "client", "schemas", "types", "cache"].flatMap((name) => [
+  ...["index", "client", "schemas", "types", "cache", "config"].flatMap((name) => [
     `dist/${name}.js`,
     `dist/${name}.d.ts`,
   ]),
@@ -60,6 +60,8 @@ try {
       import * as root from "${packageName}";
       import * as schemas from "${packageName}/schemas";
       import * as types from "${packageName}/types";
+      import { fetchPublicConfig } from "${packageName}/config";
+      if (typeof fetchPublicConfig !== "function") throw new Error("config export failed");
       import * as cache from "${packageName}/cache";
       if (typeof root.createMisoApiClient !== "function") throw new Error("root export failed");
       if (!schemas.balanceSchema || !schemas.releaseCoreSchema || !schemas.recordingMasterResourceSchema || !schemas.pressingListingResourceSchema || !schemas.walletRecordReferencesSchema) throw new Error("schemas export failed");
