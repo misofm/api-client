@@ -299,10 +299,11 @@ The client also exposes `api.getPublicConfig(network, { signal })`. Both use
 `/v1/config` independently of the catalog prefix, omit credentials, reject
 redirects, and enforce a ten-second timeout. The response schema, network,
 identity version and SHA-256 fingerprint are validated before returning.
-Validated configuration persists in browser localStorage for seven days, scoped
-to API URL, network and schema version. Cache reads repeat identity validation;
-expired or corrupt entries are discarded. HTTP freshness is honored and retained
-when populating storage. Pass storage: null to disable persistent caching.
-Storage failures do not prevent network login. Errors are never cached.
-No keys or Google audiences are embedded in this package. Without a valid fresh
-cache, failures throw and applications must offer Retry.
+No keys or Google audiences are embedded in this package. Failures throw;
+applications must offer retry rather than fall back to local keys.
+
+Configuration requests use browser cache: "no-cache": a saved HTTP response must
+be revalidated with the endpoint on each call. ETags allow an unchanged response
+to return 304; the browser supplies the saved body. The client does not keep
+configuration in localStorage or an application-level response cache. Errors
+throw without falling back to a previously loaded identity.
